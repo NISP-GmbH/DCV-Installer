@@ -1,1 +1,1 @@
-# DCV-Session-Manager
+# DCV Session Manager
