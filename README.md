@@ -2,7 +2,11 @@
 
 ## How to install the DCV Services
 
-The script to execute the DCV Session Manager is: DCV_Session_Manager_Installer.sh
+The script to execute the DCV Session Manager is:
+
+```bash
+/bin/bash DCV_Session_Manager_Installer.sh
+```
 
 ## Which services can be installed and configured
 
