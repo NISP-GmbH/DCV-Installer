@@ -96,6 +96,16 @@ readTheServiceSetupAnswer()
 	service_setup_answer=$(echo $service_setup_answer | tr '[:upper:]' '[:lower:]')
 }
 
+askAllQuestions()
+{
+    askAboutServiceSetup "dcv"
+    askAboutServiceSetup "broker"
+    askAboutServiceSetup "agent"
+    askAboutServiceSetup "cli"
+    askAboutServiceSetup "gateway"
+    askAboutServiceSetup "firewall"
+}
+
 askAboutServiceSetup()
 {
 	service_name=$1
@@ -104,6 +114,7 @@ askAboutServiceSetup()
 	        echo 
 		echo -e "Do you want to install ${GREEN}Nice DCV (without gpu support)${NC}?"
 		readTheServiceSetupAnswer
+        dcv_will_be_installed=1
 		nice_dcv_server_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "agent"
     then
@@ -276,6 +287,11 @@ askThePort()
 
 centosSetupNiceDcvWithoutGpu()
 {
+    if [[ $nice_dcv_server_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
 	echo -e "The script will setup ${GREEN}Nice DCV (without gpu support)${NC}."
 	askThePort "Nice DCV"
 		
@@ -403,6 +419,11 @@ centosSetupRequiredPackages()
 
 centosSetupSessionManagerBroker()
 {
+    if [[ $nice_dcv_broker_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
 	askThePort "Session Manager Broker"
 	askThePort "Session Manager Agent"
 
@@ -514,6 +535,11 @@ EOF
 
 centosSetupSessionManagerGateway()
 {
+    if [[ $nice_dcv_gateway_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
 	askThePort "Session Manager Gateway"
 	askThePort "Session Resolver"
 	askThePort "Web Resources"
@@ -558,6 +584,11 @@ EOF
 
 centosSetupSessionManagerAgent()
 {
+    if [[ $nice_dcv_agent_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
     # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerAgents/nice-dcv-session-manager-agent-${DCV_SM_AGENT_VERSION}.el8.x86_64.rpm
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm
     if [[ "$?" -eq "0" ]]
@@ -699,6 +730,10 @@ EOF
 
 centosConfigureFirewallD()
 {
+    if [[ $nice_dcv_firewall_install_answer != "yes" ]]
+    then
+        return 0
+    fi
 	sudo yum -y install firewalld
 	sudo iptables-save
 
