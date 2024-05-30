@@ -9,10 +9,11 @@ then
     rm -f $end_user_script_name
 fi
 
-# echo "" >> $end_user_script_name
-cat head.txt >> $end_user_script_name
+cat head.txt > $end_user_script_name
 echo "" >> $end_user_script_name
 cat library* >> $end_user_script_name
+echo "" >> $end_user_script_name
+cat vars.conf >> $end_user_script_name
 echo "" >> $end_user_script_name
 cat main.sh >> $end_user_script_name
 echo "" >> $end_user_script_name
