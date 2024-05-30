@@ -285,6 +285,36 @@ askThePort()
 	setThePort "$service_name" $port_tmp
 }
 
+ubuntuSetupRequiredPackages()
+{
+    # TODO
+}
+
+ubuntuSetupNiceDcvWithoutGpu()
+{
+    # TODO
+}
+
+ubuntuSetupSessionManagerBroker()
+{
+    # TODO
+}
+
+ubuntuSetupSessionManagerAgent()
+{
+    # TODO
+}
+
+ubuntuSetupSessionManagerGateway()
+{
+    # TODO
+}
+
+ubuntuConfigureFirewallD()
+{
+    # TODO
+}
+
 centosSetupNiceDcvWithoutGpu()
 {
     if [[ $nice_dcv_server_install_answer != "yes" ]]
