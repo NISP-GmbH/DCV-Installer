@@ -10,19 +10,62 @@ DCV_VERSION=2023.1
 #DCV_SM_GW_VERSION=""
 #DCV_SM_CLI_VERSION=""
 
-checkCentosVersion()
+checkLinuxDistro()
 {
-	if [ -f /etc/centos-release ]
-	then
-		if ! cat /etc/centos-release | egrep -iq 8
-		then
-			echo "At the moment this script just support CentOS 8. Aborting..."
-			exit 18		
-		fi
-	else
-		echo "At the moment we just support CentOS distro. Aborting..."
-		exit 19
-	fi
+    echo "If you know what you are doing, please use --force option to avoid our Linux Distro compatibility test."
+    if [ -f /etc/centos-release ]
+    then
+        if cat /etc/centos-release | egrep -iq "(7|8|9)"
+        then
+            if cat /etc/centos-release | egrep -iq "7"
+            then
+                centos_version=7
+            else
+                if cat /etc/centos-release | egrep -iq "8"
+                then
+                    centos_version=8
+                else
+                    if cat /etc/centos-release | egrep -iq "9"
+                    then
+                        centos_version=9
+                    else
+                        echo "Your RedHat Based Linux distro version..."
+                        cat /etc/centos-release
+                        echo "is not supported. Aborting..."
+                        exit 18
+                    fi
+                fi
+            fi
+        else
+            echo "Your RedHat Based Linux distro..."
+            cat /etc/centos-release
+            echo "is not supported. Aborting..."
+            exit 19
+        fi
+    else
+        if [ -f /etc/debian_version ]
+        then
+            if cat /etc/issue | egrep -iq "ubuntu"
+            then
+                ubuntu_version=$(lsb_release -rs)
+                ubuntu_major_version=$(echo $ubuntu_version | cut -d '.' -f 1)
+                ubuntu_minor_version=$(echo $ubuntu_version | cut -d '.' -f 2)
+                if ( [[ $ubuntu_major_version -lt 18 ]] || [[ $ubuntu_major_version -gt 24  ]] ) && [[ $ubuntu_minor_version -ne 04 ]]
+                then
+                    echo "Your Ubuntu version >>> $ubuntu_version <<< is not supported. Aborting..."
+                    exit 20
+                fi
+            else
+                echo "Your Debian Based Linxu distro is not supported."
+                echo "Aborting..."
+                exit 21
+            fi
+        else
+            echo "Not able to find which distro you are using."
+            echo "Aborting..."
+            exit 22
+        fi
+    fi
 }
 
 disableIpv6()
@@ -231,7 +274,7 @@ askThePort()
 	setThePort "$service_name" $port_tmp
 }
 
-setupNiceDcvWithoutGpu()
+centosSetupNiceDcvWithoutGpu()
 {
 	echo -e "The script will setup ${GREEN}Nice DCV (without gpu support)${NC}."
 	askThePort "Nice DCV"
@@ -338,7 +381,7 @@ EOF
 	read p
 }
 
-setupRequiredPackages()
+centosSetupRequiredPackages()
 {
     echo ""
     echo "Updating the system ... sudo yum -y update"
@@ -358,7 +401,7 @@ setupRequiredPackages()
     fi
 }
 
-setupSessionManagerBroker()
+centosSetupSessionManagerBroker()
 {
 	askThePort "Session Manager Broker"
 	askThePort "Session Manager Agent"
@@ -469,7 +512,7 @@ EOF
 	fi
 }
 
-setupSessionManagerGateway()
+centosSetupSessionManagerGateway()
 {
 	askThePort "Session Manager Gateway"
 	askThePort "Session Resolver"
@@ -513,7 +556,7 @@ EOF
 	fi
 }
 
-setupSessionManagerAgent()
+centosSetupSessionManagerAgent()
 {
     # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerAgents/nice-dcv-session-manager-agent-${DCV_SM_AGENT_VERSION}.el8.x86_64.rpm
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm
@@ -654,7 +697,7 @@ EOF
 	fi
 }
 
-configureFirewallD()
+centosConfigureFirewallD()
 {
 	sudo yum -y install firewalld
 	sudo iptables-save

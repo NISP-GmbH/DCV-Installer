@@ -1,30 +1,30 @@
 main()
 {
-	checkCentosVersion
+	checkLinuxDistro
 	announceHowTheScriptWorks
 	# disableIpv6
-	setupRequiredPackages
+	centosSetupRequiredPackages
 
 	# dcv server setup
 	askAboutServiceSetup "dcv"
 	if [[ $nice_dcv_server_install_answer == "yes" ]]
 	then
 		dcv_will_be_installed=1
-		setupNiceDcvWithoutGpu
+		centosSetupNiceDcvWithoutGpu
 	fi
 
 	# dcv session manager broker setup
 	askAboutServiceSetup "broker"
 	if [[ $nice_dcv_broker_install_answer == "yes" ]]
 	then
-		setupSessionManagerBroker
+		centosSetupSessionManagerBroker
 	fi
 
 	# dcv session manager agent setup
 	askAboutServiceSetup "agent"
 	if [[ $nice_dcv_agent_install_answer == "yes" ]]
 	then
-		setupSessionManagerAgent
+		centosSetupSessionManagerAgent
 	fi
 
 	# dcv session manager cli setup
@@ -39,17 +39,17 @@ main()
 	askAboutServiceSetup "gateway"
 	if [[ $nice_dcv_gateway_install_answer == "yes" ]]
 	then
-		setupSessionManagerGateway
+		centosSetupSessionManagerGateway
 	fi
 
 	# firewalld setup and rules
 	askAboutServiceSetup "firewall"
 	if [[ $nice_dcv_firewall_install_answer == "yes" ]]
 	then
-		configureFirewallD
+		centosConfigureFirewallD
 	fi
 
-	# enableIpv6
+	# finish the setup
 	finishTheSetup
 	exit 0
 }
