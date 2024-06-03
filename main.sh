@@ -11,6 +11,7 @@ main()
             echo "Is not possible to setup any package. Aborting..."
             exit 7
         else
+            centosImportKey
             centosSetupRequiredPackages
 		    centosSetupNiceDcvWithoutGpu
 		    centosSetupSessionManagerBroker
@@ -19,6 +20,7 @@ main()
             centosConfigureFirewallD
         fi
     else
+        ubuntuImportKey
         ubuntuSetupRequiredPackages
         ubuntuSetupNiceDcvWithoutGpu
         ubuntuSetupSessionManagerBroker
