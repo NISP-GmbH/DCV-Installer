@@ -1,14 +1,3 @@
-# The script will use the latest versions from thte download section
-
-DCV_VERSION=2023.1
-#DCV_SM_BROKER_VERSION=2023.1.410-1
-#DCV_SM_AGENT_VERSION=2023.1.732-1
-#DCV_SM_GW_VERSION=2023.1.710-1
-#DCV_SM_CLI_VERSION=1.1.0-140
-#DCV_SM_BROKER_VERSION=""
-#DCV_SM_AGENT_VERSION=""
-#DCV_SM_GW_VERSION=""
-#DCV_SM_CLI_VERSION=""
 
 checkLinuxDistro()
 {
@@ -580,7 +569,7 @@ centosSetupSessionManagerBroker()
 
 
 	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerBrokers/nice-dcv-session-manager-broker-${DCV_SM_BROKER_VERSION}.el8.noarch.rpm
+	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/SessionManagerBrokers/nice-dcv-session-manager-broker-${DCV_SM_BROKER_VERSION}.el8.noarch.rpm
 	wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker-el8.noarch.rpm
 	# https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/SessionManagerBrokers/nice-dcv-session-manager-broker-2023.1.410-1.el8.noarch.rpm
 	
@@ -686,7 +675,7 @@ centosSetupSessionManagerGateway()
 	askThePort "Web Resources"
 
 	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/Gateway/nice-dcv-connection-gateway-${DCV_SM_GW_VERSION}.el8.x86_64.rpm
+	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/Gateway/nice-dcv-connection-gateway-${DCV_SM_GW_VERSION}.el8.x86_64.rpm
 	wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway-el8.x86_64.rpm
 
     if [[ "$?" -eq "0" ]]
@@ -730,7 +719,7 @@ centosSetupSessionManagerAgent()
         return 0
     fi
 
-    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerAgents/nice-dcv-session-manager-agent-${DCV_SM_AGENT_VERSION}.el8.x86_64.rpm
+    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/SessionManagerAgents/nice-dcv-session-manager-agent-${DCV_SM_AGENT_VERSION}.el8.x86_64.rpm
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm
     if [[ "$?" -eq "0" ]]
     then
@@ -826,7 +815,7 @@ setupSessionManagerCli()
 {
     cd
     # https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/SessionManagerCLI/nice-dcv-session-manager-cli-1.1.0-140.zip
-    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerCLI/nice-dcv-session-manager-cli-${DCV_SM_CLI_VERSION}.zip
+    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/SessionManagerCLI/nice-dcv-session-manager-cli-${DCV_SM_CLI_VERSION}.zip
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
     if [[ "$?" -eq "0" ]]
     then
