@@ -823,11 +823,14 @@ centosSetupSessionManagerAgent()
         return 0
     fi
 
-    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/SessionManagerAgents/nice-dcv-session-manager-agent-${DCV_SM_AGENT_VERSION}.el8.x86_64.rpm
-    wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm
+    dcv_agent=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
+    wget --no-check-certificate $dcv_agent
+
     if [[ "$?" -eq "0" ]]
     then
-	sudo yum install -y https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm
+	sudo yum install -y nice-dcv-session-manager-agent*.rpm
+    rm -f nice-dcv-session-manager-agent*.rpm
+
 	if [[ "$?" -ne "0" ]]
     	then
             echo "Failed to setup the Session Manager Agent. Aborting..."
