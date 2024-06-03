@@ -599,13 +599,12 @@ centosSetupSessionManagerBroker()
     genericSetupSessionManagerBroker
 
 	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/SessionManagerBrokers/nice-dcv-session-manager-broker-${DCV_SM_BROKER_VERSION}.el8.noarch.rpm
-	wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker-el8.noarch.rpm
-	# https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/SessionManagerBrokers/nice-dcv-session-manager-broker-2023.1.410-1.el8.noarch.rpm
+    dcv_broker=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
+	wget --no-check-certificate $dcv_broker
 	
     if [[ "$?" -eq "0" ]]
     then
-		sudo yum install -y nice-dcv-session-manager-broker-el8.noarch.rpm
+		sudo yum install -y nice-dcv-session-manager-broker-*.noarch.rpm
 		if [[ "$?" -ne "0" ]]
     	then
         	echo "Failed to setup the Session Manager Broker. Aborting..."
@@ -691,6 +690,8 @@ EOF
 		echo "Failed to download the broker installer. Aborting..."
 		exit 4
 	fi
+    
+    rm -f nice-dcv-session-manager-broker*.rpm
 }
 
 genericSetupSessionManagerGateway()
