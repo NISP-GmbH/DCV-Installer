@@ -394,6 +394,7 @@ ubuntuSetupSessionManagerBroker()
     case "${ubuntu_version}" in
         "18.04")
             dcv_gateway="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Gateway/nice-dcv-connection-gateway_2021.3.251-1_amd64.ubuntu1804.deb"
+            ;;
         "20.04")
             dcv_gateway=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${major_version}${minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
             ;;
