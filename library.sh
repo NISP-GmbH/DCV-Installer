@@ -287,7 +287,22 @@ askThePort()
 
 ubuntuSetupRequiredPackages()
 {
-    # TODO
+    sudo apt update
+    wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+    sudo gpg --import NICE-GPG-KEY
+
+    case "${ubuntu_version}" in
+        "20.04")
+            sudo apt install ubuntu-desktop
+            sudo apt install gdm3
+            sudo apt upgrade
+            ;;
+        "22.04")
+            sudo apt install ubuntu-desktop
+            sudo apt install gdm3
+            sudo apt upgrade
+            ;;
+    esac
 }
 
 ubuntuSetupNiceDcvWithoutGpu()
