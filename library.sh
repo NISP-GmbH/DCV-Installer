@@ -281,6 +281,10 @@ ubuntuSetupRequiredPackages()
     sudo gpg --import NICE-GPG-KEY
 
     case "${ubuntu_version}" in
+        "18.04")
+            sudo apt install tasksel
+            sudo tasksel install ubuntu-desktop
+            ;;
         "20.04")
             sudo apt install ubuntu-desktop
             sudo apt install gdm3
