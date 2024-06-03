@@ -354,7 +354,7 @@ EOF
 
     case "${ubuntu_version}" in
         "18.04")
-            dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.2/Servers/nice-dcv-2021.2-11135-ubuntu1804-x86_64.tgz"
+            dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
         "20.04")
             dcv_server=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${major_version}${minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
             ;;
@@ -380,7 +380,27 @@ EOF
 
 ubuntuSetupSessionManagerBroker()
 {
-    # TODO
+    if [[ $nice_dcv_broker_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
+    genericSetupSessionManagerBroker
+
+    case "${ubuntu_version}" in
+        "18.04")
+            dcv_gateway="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Gateway/nice-dcv-connection-gateway_2021.3.251-1_amd64.ubuntu1804.deb"
+        "20.04")
+            dcv_gateway=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${major_version}${minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            ;;
+        "22.04")
+            dcv_gateway=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${major_version}${minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            ;;
+    esac
+
+    wget $dcv_gateway
+    sudo apt install -y ./nice-dcv-connection*amd64.ubuntu*.deb
+    rm -f nice-dcv-connection*amd64.ubuntu*.deb
 }
 
 ubuntuSetupSessionManagerAgent()
@@ -390,6 +410,8 @@ ubuntuSetupSessionManagerAgent()
 
 ubuntuSetupSessionManagerGateway()
 {
+
+    genericSetupSessionManagerGateway
     # TODO
 }
 
@@ -547,13 +569,8 @@ centosSetupRequiredPackages()
     fi
 }
 
-centosSetupSessionManagerBroker()
+genericSetupSessionManagerBroker()
 {
-    if [[ $nice_dcv_broker_install_answer != "yes" ]]
-    then
-        return 0
-    fi
-
 	askThePort "Session Manager Broker"
 	askThePort "Session Manager Agent"
 
@@ -566,7 +583,16 @@ centosSetupSessionManagerBroker()
 	then
 		broker_hostname=$broker_hostname_tmp
 	fi
+}
 
+centosSetupSessionManagerBroker()
+{
+    if [[ $nice_dcv_broker_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
+    genericSetupSessionManagerBroker
 
 	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
 	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/SessionManagerBrokers/nice-dcv-session-manager-broker-${DCV_SM_BROKER_VERSION}.el8.noarch.rpm
@@ -663,6 +689,13 @@ EOF
 	fi
 }
 
+genericSetupSessionManagerGateway()
+{
+	askThePort "Session Manager Gateway"
+	askThePort "Session Resolver"
+	askThePort "Web Resources"
+}
+
 centosSetupSessionManagerGateway()
 {
     if [[ $nice_dcv_gateway_install_answer != "yes" ]]
@@ -670,9 +703,7 @@ centosSetupSessionManagerGateway()
         return 0
     fi
 
-	askThePort "Session Manager Gateway"
-	askThePort "Session Resolver"
-	askThePort "Web Resources"
+    genericSetupSessionManagerGateway
 
 	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
 	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/Gateway/nice-dcv-connection-gateway-${DCV_SM_GW_VERSION}.el8.x86_64.rpm
