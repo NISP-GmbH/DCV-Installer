@@ -385,19 +385,31 @@ EOF
 
 	sudo systemctl isolate multi-user.target
 	sudo systemctl isolate graphical.target
-	
-	dcv_version="2023"
-	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el8" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
 
 	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY # allow the package manager to verify the signature
+    case $centos_version in
+        7)
+	        dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+        8)
+	        dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+        9)
+	        dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+    esac	
+
+    if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
+    then
+        echo "Failed to get the right dcv server tarball file to dowload and install. Aborting..."
+        exit 22
+    fi
 	wget --no-check-certificate $dcv_server
 	if [[ "$?" -eq "0" ]]
 	then
 		cd
-		tar zxvf nice-dcv-*el8*.tgz
-		rm -f nice-dcv-*el8*.tgz
+		tar zxvf nice-dcv-*el${centos_version}*.tgz
+		rm -f nice-dcv-*el${centos_version}*.tgz
 		cd nice-dcv-*x86_64
-		sudo yum -y install nice-dcv-server-*.el8.x86_64.rpm nice-xdcv-*.el8.x86_64.rpm nice-dcv-web-viewer*.el8.x86_64.rpm nice-dcv-gltest-*.el8.x86_64.rpm nice-dcv-simple-external-authenticator-*.el8.x86_64.rpm
+
+		sudo yum -y install nice-dcv-server-*.el${centos_version}.x86_64.rpm nice-xdcv-*.el${centos_version}.x86_64.rpm nice-dcv-web-viewer*.el${centos_version}.x86_64.rpm nice-dcv-gltest-*.el${centos_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${centos_version}.x86_64.rpm
 		if [[ "$?" -ne "0" ]]
     	then
         	echo "Failed to setup the DCV Server. Aborting..."
