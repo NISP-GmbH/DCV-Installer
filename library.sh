@@ -403,7 +403,7 @@ ubuntuSetupSessionManagerBroker()
             ;;
     esac
 
-    wget $dcv_gateway
+    wget --no-check-certificate $dcv_gateway
     sudo apt install -y ./nice-dcv-connection*amd64.ubuntu*.deb
     rm -f nice-dcv-connection*amd64.ubuntu*.deb
 }
