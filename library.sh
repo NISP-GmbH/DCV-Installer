@@ -379,7 +379,7 @@ EOF
     sudo apt install -y ./nice-*amd64.ubuntu*.deb
 
     rm -rf nice-dcv-*64
-    rm -f nice-dcv-*ubun*.tgz
+    rm -f nice-dcv-*.tgz
 }
 
 ubuntuSetupSessionManagerBroker()
@@ -387,7 +387,7 @@ ubuntuSetupSessionManagerBroker()
     if [[ $nice_dcv_broker_install_answer != "yes" ]]
     then
         return 0
-    fi
+   fi
 
     genericSetupSessionManagerBroker
 
