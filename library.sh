@@ -274,11 +274,16 @@ askThePort()
 	setThePort "$service_name" $port_tmp
 }
 
+ubuntuImportKey()
+{
+    wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+    sudo gpg --import NICE-GPG-KEY
+    rm -f NICE-GPG-KEY
+}
+
 ubuntuSetupRequiredPackages()
 {
     sudo apt update
-    wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-    sudo gpg --import NICE-GPG-KEY
 
     case "${ubuntu_version}" in
         "18.04")
@@ -619,6 +624,11 @@ EOF
 	read p
 }
 
+centosImportKey()
+{
+    sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+}
+
 centosSetupRequiredPackages()
 {
     echo ""
@@ -664,7 +674,6 @@ centosSetupSessionManagerBroker()
 
     genericSetupSessionManagerBroker
 
-	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
     dcv_broker=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
 	wget --no-check-certificate $dcv_broker
 	
@@ -774,8 +783,6 @@ centosSetupSessionManagerGateway()
     fi
 
     genericSetupSessionManagerGateway
-
-	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
 
 	dcv_gateway=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
 
