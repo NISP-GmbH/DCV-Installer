@@ -1,5 +1,10 @@
 # DCV Session Manager
 
+## Supported Operating Systems
+
+- RedHat based Linux distros (RedHat, Centos, AlmaLinux, Rocky Linux etc); Versions: EL7, EL8 and EL9
+- Ubuntu based Linux distros; Versions: 18.04, 20.04 and 22.04
+
 ## How to install the DCV Services
 
 The script to execute the DCV Session Manager is:
