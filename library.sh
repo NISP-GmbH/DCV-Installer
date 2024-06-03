@@ -410,12 +410,89 @@ ubuntuSetupSessionManagerBroker()
 
 ubuntuSetupSessionManagerAgent()
 {
-    # TODO
+    if [[ $nice_dcv_agent_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+    case "${ubuntu_version}" in
+        "18.04")
+            dcv_gateway="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
+            ;;
+        "20.04")
+            dcv_agent=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            ;;
+        "22.04")
+            dcv_agent=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            ;;
+    esac
+
+    wget --no-check-certificate $dcv_agent
+    sudo apt install -y ./nice-dcv-session-manager-agent*.deb
+
+	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
+	
+	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
+version = '0.1'
+[agent]
+
+# hostname or IP of the broker. This parameter is mandatory.
+# broker_host = 'localhost'
+
+# The port of the broker. Default: 8445
+broker_port = $agent_to_broker_port
+broker_host = "$broker_hostname"         # it could be the case that you need to remove the previous broker_host config to active this one
+
+# CA used to validate the certificate of the broker.
+# ca_file = 'ca-cert.pem'
+ca_file = '/etc/dcv-session-manager-agent/dcvsmbroker_ca.pem'
+
+# Set to false to accept invalid certificates. True by default.
+tls_strict = false
+
+# Folder on the file system from which the tag files are read.
+# Default: '/etc/dcv-session-manager-agent/tags/' on Linux and
+# '<INSTALLATION_DIR>/conf/tags/' on Windows.
+#tags_folder =
+
+# Folder on the file system which contains scripts allowed to
+# customize the initialization of desktop environment used by
+# DCV for Linux Virtual sessions.
+# Default: '/var/lib/dcv-session-manager-agent/init/'
+#init_folder =
+
+# Folder on the file system which contains scripts and apps
+# allowed to be automatically executed at session startup.
+# Default: '/var/lib/dcv-session-manager-agent/autorun/' on Linux and
+# 'C:\ProgramData\NICE\DCVSessionManagerAgent\autorun' on Windows.
+#autorun_folder =
+
+# DCV server cli root path
+# Default: '/usr/bin/dcv' on Linux and
+dcv_root = '/usr/bin/dcv'
+
+[log]
+
+# log verbosity. Default: 'info'
+#level = 'debug'
+
+# Directory used for the logs.
+# Default: '/var/log/dcv-session-manager-agent/' on Linux and
+directory = '/var/log/dcv-session-manager-agent/'
+
+# log rotation. Default: daily
+#rotation = 'daily'
+# tls_strict = false
+EOF
+
+	sudo cp /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+	sudo systemctl restart dcv-session-manager-broker
+	sudo systemctl enable --now dcv-session-manager-agent
+
+    rm -f ./nice-dcv-session-manager-agent*.deb
 }
 
 ubuntuSetupSessionManagerGateway()
 {
-
     genericSetupSessionManagerGateway
     # TODO
 }
