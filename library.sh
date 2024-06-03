@@ -374,12 +374,12 @@ EOF
         exit 23
     fi 
     tar zxvf nice-dcv-*ubun*.tgz
+    rm -f nice-dcv-*.tgz
     cd nice-dcv-*64
 
     sudo apt install -y ./nice-*amd64.ubuntu*.deb
 
     rm -rf nice-dcv-*64
-    rm -f nice-dcv-*.tgz
 }
 
 ubuntuSetupSessionManagerBroker()
@@ -428,6 +428,7 @@ ubuntuSetupSessionManagerAgent()
 
     wget --no-check-certificate $dcv_agent
     sudo apt install -y ./nice-dcv-session-manager-agent*.deb
+    rm -f ./nice-dcv-session-manager-agent*.deb
 
 	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
 	
@@ -487,8 +488,6 @@ EOF
 	sudo cp /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
 	sudo systemctl restart dcv-session-manager-broker
 	sudo systemctl enable --now dcv-session-manager-agent
-
-    rm -f ./nice-dcv-session-manager-agent*.deb
 }
 
 ubuntuSetupSessionManagerGateway()
@@ -615,7 +614,6 @@ EOF
 		exit 1
 	fi
 
-    rm -f $dcv_server
     rm -rf nice-dcv-*x86_64
 	echo "Nice DCV service was installed. Please press enter to continue the installing process or ctrl+c to stop here."
 	read p
@@ -673,6 +671,7 @@ centosSetupSessionManagerBroker()
     if [[ "$?" -eq "0" ]]
     then
 		sudo yum install -y nice-dcv-session-manager-broker-*.noarch.rpm
+        rm -f nice-dcv-session-manager-broker*.rpm
 		if [[ "$?" -ne "0" ]]
     	then
         	echo "Failed to setup the Session Manager Broker. Aborting..."
@@ -758,8 +757,6 @@ EOF
 		echo "Failed to download the broker installer. Aborting..."
 		exit 4
 	fi
-    
-    rm -f nice-dcv-session-manager-broker*.rpm
 }
 
 genericSetupSessionManagerGateway()
@@ -787,13 +784,12 @@ centosSetupSessionManagerGateway()
     if [[ "$?" -eq "0" ]]
     then
 		sudo yum install -y nice-dcv-connection-gateway*.rpm
+        rm -f nice-dcv-connection-gateway*.rpm
 	    if [[ "$?" -ne "0" ]]
  	    then
  	       echo "Failed to setup the DCV Connection Gateway. Aborting..."
 	        exit 15
 	    fi
-
-    rm -f nice-dcv-connection-gateway*.rpm
 
         cat << EOF | sudo tee $dcv_gateway_config_file
 [gateway]
