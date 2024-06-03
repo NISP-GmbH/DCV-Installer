@@ -789,17 +789,21 @@ centosSetupSessionManagerGateway()
     genericSetupSessionManagerGateway
 
 	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/Gateway/nice-dcv-connection-gateway-${DCV_SM_GW_VERSION}.el8.x86_64.rpm
-	wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway-el8.x86_64.rpm
+
+	dcv_gateway=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
+
+	wget --no-check-certificate $dcv_gateway
 
     if [[ "$?" -eq "0" ]]
     then
-		sudo yum install -y nice-dcv-connection-gateway-el8.x86_64.rpm
+		sudo yum install -y nice-dcv-connection-gateway*.rpm
 	    if [[ "$?" -ne "0" ]]
  	    then
  	       echo "Failed to setup the DCV Connection Gateway. Aborting..."
 	        exit 15
 	    fi
+
+    rm -f nice-dcv-connection-gateway*.rpm
 
         cat << EOF | sudo tee $dcv_gateway_config_file
 [gateway]
