@@ -303,6 +303,35 @@ ubuntuSetupRequiredPackages()
             sudo apt upgrade
             ;;
     esac
+
+    if [ -f /etc/gdm3/custom.conf ]
+    then
+
+        gdm3_file="/etc/gdm3/custom.conf"
+        target_line="WaylandEnable=false"
+
+        sudo cp "$gdm3_file" "${gdm3_file}.bak"
+
+        sudo awk -v target="$TARGET_LINE" '
+    BEGIN { in_daemon = 0; inserted = 0 }
+    /^\[daemon\]/ { in_daemon = 1 }
+    in_daemon && /^$/ { in_daemon = 0 }
+    in_daemon && /WaylandEnable/ { $0 = target; inserted = 1 }
+    { print }
+    END {
+        if (in_daemon && !inserted) {
+            print target
+        }
+    }
+' "$gdm3_file" > "$gdm3_file.tmp"
+
+        sudo mv "${gdm3_file}.tmp" "$gdm3_file"
+    fi
+
+    sudo systemctl restart gdm3
+    sudo systemctl get-default
+    sudo systemctl set-default graphical.target
+    sudo systemctl isolate graphical.target
 }
 
 ubuntuSetupNiceDcvWithoutGpu()
