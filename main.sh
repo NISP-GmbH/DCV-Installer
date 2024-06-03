@@ -20,6 +20,11 @@ main()
         fi
     else
         ubuntuSetupRequiredPackages
+        ubuntuSetupNiceDcvWithoutGpu
+        ubuntuSetupSessionManagerBroker
+        ubuntuSetupSessionManagerAgent
+        ubuntuSetupSessionManagerGateway
+        ubuntuConfigureFirewallD
     fi
 
 	# dcv session manager cli setup
