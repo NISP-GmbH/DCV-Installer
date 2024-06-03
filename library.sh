@@ -435,6 +435,8 @@ EOF
 		exit 1
 	fi
 
+    rm -f $dcv_server
+    rm -rf nice-dcv-*x86_64
 	echo "Nice DCV service was installed. Please press enter to continue the installing process or ctrl+c to stop here."
 	read p
 }
