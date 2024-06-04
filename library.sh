@@ -306,11 +306,13 @@ ubuntuSetupRequiredPackages()
     then
 
         gdm3_file="/etc/gdm3/custom.conf"
-        target_line="WaylandEnable=false"
+        if [ -f $gdm3_file ]
+        then
+            target_line="WaylandEnable=false"
 
-        sudo cp "$gdm3_file" "${gdm3_file}.bak"
+            sudo cp "$gdm3_file" "${gdm3_file}.bak"
 
-        sudo awk -v target="$TARGET_LINE" '
+            sudo awk -v target="$TARGET_LINE" '
     BEGIN { in_daemon = 0; inserted = 0 }
     /^\[daemon\]/ { in_daemon = 1 }
     in_daemon && /^$/ { in_daemon = 0 }
@@ -322,7 +324,7 @@ ubuntuSetupRequiredPackages()
         }
     }
 ' "$gdm3_file" > "$gdm3_file.tmp"
-
+        fi
         sudo mv "${gdm3_file}.tmp" "$gdm3_file"
     fi
 
