@@ -540,9 +540,16 @@ EOF
     sudo systemctl restart dcv-session-manager-broker
 }
 
-ubuntuConfigureFirewallD()
+ubuntuConfigureFirewall()
 {
-    # TODO
+    if [[ $nice_dcv_firewall_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+    sudo apt -y install firewalld
+
+    setFirewalldRules
+	sudo iptables-save 
 }
 
 centosSetupNiceDcvWithoutGpu()
@@ -1011,15 +1018,8 @@ EOF
 	fi
 }
 
-centosConfigureFirewallD()
+setFirewalldRules()
 {
-    if [[ $nice_dcv_firewall_install_answer != "yes" ]]
-    then
-        return 0
-    fi
-	sudo yum -y install firewalld
-	sudo iptables-save
-
 	# nice dcv server port
 	if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
 	then
@@ -1046,6 +1046,18 @@ centosConfigureFirewallD()
 
 	sudo firewall-cmd --reload
 	sudo iptables-save 
+}
+
+centosConfigureFirewall()
+{
+    if [[ $nice_dcv_firewall_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+	sudo yum -y install firewalld
+	sudo iptables-save
+
+    setFirewalldRules
 }
 
 finishTheSetup()
