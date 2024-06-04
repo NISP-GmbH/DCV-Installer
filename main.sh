@@ -17,7 +17,7 @@ main()
 		    centosSetupSessionManagerBroker
             centosSetupSessionManagerAgent
             centosSetupSessionManagerGateway
-            centosConfigureFirewallD
+            centosConfigureFirewall
         fi
     else
         ubuntuImportKey
@@ -26,7 +26,7 @@ main()
         ubuntuSetupSessionManagerBroker
         ubuntuSetupSessionManagerAgent
         ubuntuSetupSessionManagerGateway
-        ubuntuConfigureFirewallD
+        ubuntuConfigureFirewall
     fi
 
 	# dcv session manager cli setup
