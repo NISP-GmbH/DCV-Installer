@@ -334,10 +334,6 @@ ubuntuSetupRequiredPackages()
 
 ubuntuSetupNiceDcvWithoutGpu()
 {
-    wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-    sudo gpg --import NICE-GPG-KEY
-    rm NICE-GPG-KEY
-
     sudo systemctl get-default
     sudo systemctl set-default graphical.target
     sudo systemctl isolate graphical.target
