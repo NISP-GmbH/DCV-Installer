@@ -13,7 +13,7 @@ main()
         else
             centosImportKey
             centosSetupRequiredPackages
-		    centosSetupNiceDcvWithoutGpu
+            installNiceDcvSetup
 		    centosSetupSessionManagerBroker
             centosSetupSessionManagerAgent
             centosSetupSessionManagerGateway
@@ -22,7 +22,7 @@ main()
     else
         ubuntuImportKey
         ubuntuSetupRequiredPackages
-        ubuntuSetupNiceDcvWithoutGpu
+        installNiceDcvSetup
         ubuntuSetupSessionManagerBroker
         ubuntuSetupSessionManagerAgent
         ubuntuSetupSessionManagerGateway
