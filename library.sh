@@ -623,7 +623,6 @@ EOF
 	sudo systemctl isolate multi-user.target
 	sudo systemctl isolate graphical.target
 
-	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY # allow the package manager to verify the signature
 	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
 
     if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
@@ -974,8 +973,6 @@ registerFirstApiClient()
 setupSessionManagerCli()
 {
     cd
-    # https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/SessionManagerCLI/nice-dcv-session-manager-cli-1.1.0-140.zip
-    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${dcv_version}/SessionManagerCLI/nice-dcv-session-manager-cli-${DCV_SM_CLI_VERSION}.zip
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
     if [[ "$?" -eq "0" ]]
     then
