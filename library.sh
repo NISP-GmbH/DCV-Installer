@@ -457,6 +457,7 @@ ubuntuSetupNvidiaDriver()
 ubuntuSetupAmdDriver()
 {
     sudo apt -y install gcc make awscli bc sharutils
+    sudo apt -y install linux-modules-extra-$(uname -r) linux-firmware
     if [ $ubuntu_major_version -eq 22 ]
     then
         sudo apt -y install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext
@@ -469,6 +470,10 @@ EOF
         cat << EOF | sudo tee --append /etc/modprobe.d/20-amdgpu.conf
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
+        wget https://repo.radeon.com/amdgpu-install/latest/ubuntu/jammy/amdgpu-install_6.0.60000-1_all.deb
+        sudo apt -y install ./amdgpu-install*
+        sudo apt -y install amdgpu-dkms
+        sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
     fi
 
     if [ $ubuntu_major_version -eq 20 ]
@@ -483,6 +488,11 @@ EOF
         cat <<EOF> /etc/modprobe.d/20-amdgpu.conf
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
+        wget https://repo.radeon.com/amdgpu-install/latest/ubuntu/focal/amdgpu-install_6.0.60000-1_all.deb
+        sudo apt -y install ./amdgpu-install*
+        sudo apt -y install amdgpu-dkms
+        sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
+
     fi
 
     if [ $ubuntu_major_version -eq 18 ]
