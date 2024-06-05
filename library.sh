@@ -432,6 +432,21 @@ ubuntuSetupNiceDcvWithoutGpuAmd()
 
 ubuntuSetupNiceDcvWithoutGpu()
 {
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "true" ]]
+        then
+            return 0
+        else
+            if [[ $ubuntu_distro == "false" ]]
+            then
+                return 0
+            fi
+        fi
+    fi
+
     sudo systemctl get-default
     sudo systemctl set-default graphical.target
     sudo systemctl isolate graphical.target
@@ -660,9 +675,19 @@ centosSetupNiceDcvWithGpuAmd()
 
 centosSetupNiceDcvWithoutGpu()
 {
-    if [[ $nice_dcv_server_install_answer != "yes" ]]
+    if [[ $dcv_will_be_installed == "false" ]]
     then
         return 0
+    else
+        if [[ $dcv_gpu_support == "true" ]]
+        then
+            return 0
+        else
+            if [[ $centos_distro == "false" ]]
+            then
+                return 0
+            fi
+        fi
     fi
 
 	echo -e "The script will setup ${GREEN}Nice DCV (without gpu support)${NC}."
