@@ -509,7 +509,15 @@ ubuntuSetupNiceDcvServer()
     rm -f nice-dcv-*.tgz
     cd nice-dcv-*64
 
-    sudo apt install -y ./nice-*amd64.ubuntu*.deb
+    sudo apt -y install ./nice-dcv-server*
+    sudo apt -y install ./nice-dcv-web-viewer*
+    sudo usermod -aG video dcv
+    sudo apt -y install ./nice-xdcv*
+    sudo apt -y install ./nice-dcv-gl*
+    sudo apt -y install ./nice-dcv-simple-external-authenticato*
+    sudo apt -y install dkms
+    sudo dcvusbdriverinstaller --quiet
+    sudo apt -y install pulseaudio-utils
 
     rm -rf nice-dcv-*64
 }
