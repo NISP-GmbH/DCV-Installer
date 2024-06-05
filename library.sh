@@ -470,7 +470,7 @@ EOF
         cat << EOF | sudo tee --append /etc/modprobe.d/20-amdgpu.conf
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
-        wget --no-check-certificate $url_amd_linux_driver
+        wget --no-check-certificate $url_amd_ubuntu_driver
         sudo apt -y install ./amdgpu-install*
         sudo apt -y install amdgpu-dkms
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
@@ -488,7 +488,7 @@ EOF
         cat <<EOF> /etc/modprobe.d/20-amdgpu.conf
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
-        wget --no-check-certificate $url_amd_linux_driver
+        wget --no-check-certificate $url_amd_ubuntu_driver
         sudo apt -y install ./amdgpu-install*
         sudo apt -y install amdgpu-dkms
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
