@@ -427,6 +427,14 @@ ubuntuSetupNiceDcvWithGpuPrepareBase()
     #TODO
 }
 
+ubuntuSetupNvidiaDriver()
+{
+    wget --no-check-certificate $url_nvidia_tesla_driver
+    sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s
+    sudo nvidia-xconfig --preserve-busid --enable-all-gpus
+    rm -f ./NVIDIA-Linux-x86_64*.run -s
+}
+
 ubuntuSetupNiceDcvWithGpuNvidia()
 {
     if [[ $dcv_will_be_installed == "false" ]]
@@ -450,7 +458,8 @@ ubuntuSetupNiceDcvWithGpuNvidia()
     fi
 
     ubuntuSetupNiceDcvWithGpuPrepareBase
-    #TODO
+    ubuntuSetupNvidiaDriver
+    ubuntuSetupNiceDcvServer
 }
 
 ubuntuSetupNiceDcvWithGpuAmd()
