@@ -424,7 +424,25 @@ ubuntuSetupRequiredPackages()
 
 ubuntuSetupNiceDcvWithGpuPrepareBase()
 {
-    #TODO
+    sudo apt install -y mesa-utils
+    sudo apt-get install -y gcc make linux-headers-$(uname -r)
+
+    if [ "`grep 'blacklist nouveau' /etc/modprobe.d/blacklist.conf`" == "" ]
+    then  
+        cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
+blacklist vga16fb
+blacklist nouveau
+blacklist rivafb
+blacklist nvidiafb
+blacklist rivatv
+EOF
+    fi
+
+    if [ "`grep 'rdblacklist=nouveau' /etc/default/grub`" == "" ]
+    then  
+        echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
+        sudo update-grub
+    fi
 }
 
 ubuntuSetupNvidiaDriver()
@@ -433,6 +451,40 @@ ubuntuSetupNvidiaDriver()
     sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s
     sudo nvidia-xconfig --preserve-busid --enable-all-gpus
     rm -f ./NVIDIA-Linux-x86_64*.run -s
+}
+
+ubuntuSetupAmdDriver()
+{
+    #TODO
+}
+
+ubuntuSetupNiceDcvServer()
+{
+    case "${ubuntu_version}" in
+        "18.04")
+            dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
+            ;;
+        "20.04")
+            dcv_server=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+            ;;
+        "22.04")
+            dcv_server=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+            ;;
+    esac
+
+    wget --no-check-certificate $dcv_server
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
+        exit 23
+    fi 
+    tar zxvf nice-dcv-*ubun*.tgz
+    rm -f nice-dcv-*.tgz
+    cd nice-dcv-*64
+
+    sudo apt install -y ./nice-*amd64.ubuntu*.deb
+
+    rm -rf nice-dcv-*64
 }
 
 ubuntuSetupNiceDcvWithGpuNvidia()
@@ -485,7 +537,8 @@ ubuntuSetupNiceDcvWithGpuAmd()
     fi
 
     ubuntuSetupNiceDcvWithGpuPrepareBase
-    #TODO
+    ubuntuSetupAmdDriver
+    ubuntuSetupNiceDcvServer
 }
 
 ubuntuSetupNiceDcvWithoutGpu()
@@ -508,51 +561,6 @@ ubuntuSetupNiceDcvWithoutGpu()
     sudo systemctl get-default
     sudo systemctl set-default graphical.target
     sudo systemctl isolate graphical.target
-    sudo apt install -y mesa-utils
-    sudo apt-get install -y gcc make linux-headers-$(uname -r)
-
-    if [ "`grep 'blacklist nouveau' /etc/modprobe.d/blacklist.conf`" == "" ]
-    then  
-        cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
-blacklist vga16fb
-blacklist nouveau
-blacklist rivafb
-blacklist nvidiafb
-blacklist rivatv
-EOF
-    fi
-
-    if [ "`grep 'rdblacklist=nouveau' /etc/default/grub`" == "" ]
-    then  
-        echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
-        sudo update-grub
-    fi
-
-    case "${ubuntu_version}" in
-        "18.04")
-            dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
-            ;;
-        "20.04")
-            dcv_server=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
-            ;;
-        "22.04")
-            dcv_server=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
-            ;;
-    esac
-
-    wget --no-check-certificate $dcv_server
-    if [[ "$?" -eq "0" ]]
-    then
-        echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
-        exit 23
-    fi 
-    tar zxvf nice-dcv-*ubun*.tgz
-    rm -f nice-dcv-*.tgz
-    cd nice-dcv-*64
-
-    sudo apt install -y ./nice-*amd64.ubuntu*.deb
-
-    rm -rf nice-dcv-*64
 }
 
 ubuntuSetupSessionManagerBroker()
@@ -756,6 +764,11 @@ centosSetupNvidiaDriver()
     rm -f ./NVIDIA-Linux-x86_64*.run -s
 }
 
+centosSetupAmdDriver()
+{
+    #TODO
+}
+
 centosSetupNiceDcvServer()
 {
 	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
@@ -854,7 +867,8 @@ centosSetupNiceDcvWithGpuAmd()
     fi
 
     centosSetupNiceDcvWithGpuPrepareBase
-    #TODO
+    centosSetupAmdDriver
+    centosSetupNiceDcvServer
 }
 
 centosSetupNiceDcvWithoutGpu()
