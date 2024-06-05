@@ -422,11 +422,50 @@ ubuntuSetupRequiredPackages()
 
 ubuntuSetupNiceDcvWithGpuNvidia()
 {
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "nvidia" ]]
+            then
+                return 0
+            else
+                if [[ $ubuntu_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
     #TODO
 }
 
 ubuntuSetupNiceDcvWithGpuAmd()
 {
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "amd" ]]
+            then
+                return 0
+            else
+                if [[ $ubuntu_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
     #TODO
 }
 
@@ -665,11 +704,49 @@ ubuntuConfigureFirewall()
 
 centosSetupNiceDcvWithGpuNvidia()
 {
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "nvidia" ]]
+            then
+                return 0
+            else
+                if [[ $centos_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
     #TODO
 }
 
 centosSetupNiceDcvWithGpuAmd()
 {
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "amd" ]]
+            then
+                return 0
+            else
+                if [[ $centos_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
     #TODO
 }
 
