@@ -191,7 +191,7 @@ installNiceDcvSetup()
                 then
                     centosSetupNiceDcvWithGpuNvidia
                 else
-                    if [[ "$ubuntu_distro" == "yes" ]]
+                    if [[ "$ubuntu_distro" == "true" ]]
                     then
                         ubuntuSetupNiceDcvWithGpuNvidia
                     fi
@@ -205,7 +205,7 @@ installNiceDcvSetup()
                     then
                         centosSetupNiceDcvWithGpuAmd
                     else
-                        if [[ "$ubuntu_distro" == "yes" ]]
+                        if [[ "$ubuntu_distro" == "true" ]]
                         then
                            ubuntuSetupNiceDcvWithGpuAmd
                         fi
@@ -218,7 +218,7 @@ installNiceDcvSetup()
             then
                 centosSetupNiceDcvWithoutGpu
             else
-                if [[ "$ubuntu_distro" == "yes" ]]
+                if [[ "$ubuntu_distro" == "true" ]]
                 then
                     ubuntuSetupNiceDcvWithoutGpu
                 fi
