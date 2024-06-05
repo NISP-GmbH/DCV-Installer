@@ -4,6 +4,7 @@ checkLinuxDistro()
     echo "If you know what you are doing, please use --force option to avoid our Linux Distro compatibility test."
     if [ -f /etc/centos-release ]
     then
+        centos_distro="true"
         if cat /etc/centos-release | egrep -iq "(7|8|9)"
         then
             if cat /etc/centos-release | egrep -iq "7"
@@ -36,6 +37,7 @@ checkLinuxDistro()
         then
             if cat /etc/issue | egrep -iq "ubuntu"
             then
+                ubuntu_distro="true"
                 ubuntu_version=$(lsb_release -rs)
                 ubuntu_major_version=$(echo $ubuntu_version | cut -d '.' -f 1)
                 ubuntu_minor_version=$(echo $ubuntu_version | cut -d '.' -f 2)
@@ -75,7 +77,7 @@ net.ipv6.conf.all.disable_ipv6 = 0
 net.ipv6.conf.default.disable_ipv6 = 0
 net.ipv6.conf.lo.disable_ipv6 = 0
 EOF
-	sudo sysctl -p
+`	sudo sysctl -p
 }
 
 readTheServiceSetupAnswer()
@@ -100,11 +102,7 @@ askAboutServiceSetup()
 	service_name=$1
     if echo $service_name | egrep -iq "dcv"
     then
-	        echo 
-		echo -e "Do you want to install ${GREEN}Nice DCV (without gpu support)${NC}?"
-		readTheServiceSetupAnswer
-        dcv_will_be_installed=1
-		nice_dcv_server_install_answer=$service_setup_answer
+        askAboutNiceDcvSetup
     elif echo $service_name | egrep -iq "agent"
     then
 	        echo 
@@ -140,6 +138,94 @@ askAboutServiceSetup()
 		exit 17
 	fi
 
+}
+
+askAboutNiceDcvSetup()
+{
+    echo 
+    echo -e "Do you want to install ${GREEN}Nice DCV (with or without gpu support)${NC}?"
+	readTheServiceSetupAnswer
+    if echo $service_setup_answer | egrep -iq "yes"
+    then
+        dcv_will_be_installed="true"
+        echo -e "Do you want to install ${GREEN}Nice DCV with GPU Support?${NC}?"
+	    readTheServiceSetupAnswer
+        if echo $service_setup_answer | egrep -iq "yes"
+        then
+            dcv_gpu_support="true"
+            echo -e "Do you want to install ${GREEN}Nice DCV with Nvidia Support?${NC}?"
+	        readTheServiceSetupAnswer
+            if echo $service_setup_answer | egrep -iq "yes"
+            then
+                dcv_gpu_type="nvidia"
+            else
+                echo -e "Do you want to install ${GREEN}Nice DCV with AMD/RadeonD Support?${NC}?"
+                if echo $service_setup_answer | egrep -iq "yes"
+                then
+                    dcv_gpu_type="amd"
+                else
+                    echo -e "You did not select a NVIDIA or AMD/Radeon support. This setup can not continue. Aborting..."
+                    exit 24
+                fi
+            fi
+        else
+            dcv_gpu_support="false"
+        fi
+    else
+        dcv_will_be_installed="false"
+    fi
+}
+
+installNiceDcvSetup()
+{
+    # if dcv server will be installed
+    if [[ "$dcv_will_be_installed" == "true" ]]
+    then
+        # if dcv server will have gpu support
+        if [[ "$dcv_gpu_support" == "true" ]]
+        then
+            # if dcv server driver support will be nvidia
+            if [[ "$dcv_gpu_type" == "nvidia" ]]
+            then
+                if [[ "$centos_distro" == "true" ]]
+                then
+                    centosSetupNiceDcvWithGpuNvidia
+                else
+                    if [[ "$ubuntu_distro" == "yes" ]]
+                    then
+                        ubuntuSetupNiceDcvWithGpuNvidia
+                    fi
+                fi
+            # if the dcv driver support will be amd
+            else
+                # if dcv server driver support will be amd
+                if [[ "$dcv_gpu_type" == "amd" ]]
+                then
+                    if [[ "$centos_distro" == "true" ]]
+                    then
+                        centosSetupNiceDcvWithGpuAmd
+                    else
+                        if [[ "$ubuntu_distro" == "yes" ]]
+                        then
+                           ubuntuSetupNiceDcvWithGpuAmd
+                        fi
+                    fi
+                fi
+            fi           
+        # if dcv server will not have gpu support
+        else
+            if [[ "$centos_distro" == "true" ]]
+            then
+                centosSetupNiceDcvWithoutGpu
+            else
+                if [[ "$ubuntu_distro" == "yes" ]]
+                then
+                    ubuntuSetupNiceDcvWithoutGpu
+                fi
+            fi
+        fi
+
+    fi
 }
 
 checkIfPortIsBeingUsed()
@@ -332,6 +418,16 @@ ubuntuSetupRequiredPackages()
     sudo systemctl get-default
     sudo systemctl set-default graphical.target
     sudo systemctl isolate graphical.target
+}
+
+ubuntuSetupNiceDcvWithGpuNvidia()
+{
+    #TODO
+}
+
+ubuntuSetupNiceDcvWithoutGpuAmd()
+{
+    #TODO
 }
 
 ubuntuSetupNiceDcvWithoutGpu()
@@ -550,6 +646,16 @@ ubuntuConfigureFirewall()
 
     setFirewalldRules
 	sudo iptables-save 
+}
+
+centosSetupNiceDcvWithGpuNvidia()
+{
+    #TODO
+}
+
+centosSetupNiceDcvWithGpuAmd()
+{
+    #TODO
 }
 
 centosSetupNiceDcvWithoutGpu()
