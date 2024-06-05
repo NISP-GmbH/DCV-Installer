@@ -545,6 +545,13 @@ ubuntuSetupNiceDcvServer()
     rm -rf nice-dcv-*64
     createDcvSsl
 
+    sudo sed -ie 's/#owner = ""/owner = "ubuntu"/' /etc/dcv/dcv.conf
+    sudo sed -ie 's/#create-session = true/create-session = true/' /etc/dcv/dcv.conf
+    sudo sed -ie 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
+    sudo systemctl isolate multi-user.target
+    sudo dcvgladmin enable
+    sudo systemctl isolate graphical.target
+
     sudo systemctl enable --now dcvserver
 }
 
