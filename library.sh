@@ -174,6 +174,8 @@ askAboutNiceDcvSetup()
     else
         dcv_will_be_installed="false"
     fi
+
+	askThePort "Nice DCV"
 }
 
 installNiceDcvSetup()
@@ -712,7 +714,86 @@ ubuntuConfigureFirewall()
 
 centosSetupNiceDcvWithGpuPrepareBase()
 {
+    # upgrade
+    sudo yum upgrade -y
+
+    # setup server GUI
+    sudo yum groupinstall 'Server with GUI' -y
+    sudo systemctl get-default
+    sudo systemctl set-default graphical.target
+    sudo systemctl isolate graphical.target
+    sudo yum install glx-utils -y
+
+    # prepare to setup nvidia driver
+    sudo yum erase nvidia cuda
+    sudo yum install -y make gcc kernel-devel-$(uname -r) wget
+    cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
+blacklist vga16fb
+blacklist nouveau
+blacklist rivafb
+blacklist nvidiafb
+blacklist rivatv
+EOF
+    echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    sudo rmmod nouveau
     #TODO
+}
+
+centosSetupNvidiaDriver()
+{
+    wget --no-check-certificate $url_nvidia_tesla_driver
+    sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s
+    sudo nvidia-xconfig --preserve-busid --enable-all-gpus
+    rm -f ./NVIDIA-Linux-x86_64*.run -s
+}
+
+centosSetupNiceDcvServer()
+{
+	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+
+    if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
+    then
+        echo "Failed to get the right dcv server tarball file to dowload and install. Aborting..."
+        exit 22
+    fi
+	wget --no-check-certificate $dcv_server
+	if [[ "$?" -eq "0" ]]
+	then
+		cd
+		tar zxvf nice-dcv-*el${centos_version}*.tgz
+		rm -f nice-dcv-*el${centos_version}*.tgz
+		cd nice-dcv-*x86_64
+
+		sudo yum -y install nice-dcv-server-*.el${centos_version}.x86_64.rpm nice-xdcv-*.el${centos_version}.x86_64.rpm nice-dcv-web-viewer*.el${centos_version}.x86_64.rpm nice-dcv-gltest-*.el${centos_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${centos_version}.x86_64.rpm
+		if [[ "$?" -ne "0" ]]
+    	then
+        	echo "Failed to setup the DCV Server. Aborting..."
+        	exit 10
+    	fi
+		sudo systemctl isolate multi-user.target
+		sudo systemctl isolate graphical.target
+		cat << EOF | sudo tee /etc/dcv/dcv.conf
+[license]
+[log]
+[session-management]
+[session-management/defaults]
+[session-management/automatic-console-session]
+[display]
+[connectivity]
+web-port=$dcv_port
+[security]
+EOF
+		cd
+		sudo systemctl enable --now dcvserver
+	else
+		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
+		exit 1
+	fi
+
+    rm -rf nice-dcv-*x86_64
+	echo "Nice DCV service was installed. Please press enter to continue the installing process or ctrl+c to stop here."
+	read p
 }
 
 centosSetupNiceDcvWithGpuNvidia()
@@ -738,7 +819,8 @@ centosSetupNiceDcvWithGpuNvidia()
     fi
 
     centosSetupNiceDcvWithGpuPrepareBase
-    #TODO
+    centosSetupNvidiaDriver
+    centosSetupNiceDcvServer
 }
 
 centosSetupNiceDcvWithGpuAmd()
@@ -783,10 +865,7 @@ centosSetupNiceDcvWithoutGpu()
             fi
         fi
     fi
-
-	echo -e "The script will setup ${GREEN}Nice DCV (without gpu support)${NC}."
-	askThePort "Nice DCV"
-		
+	
 	sudo yum -y groupinstall 'Server with GUI'
 	if [[ "$?" -ne "0" ]]
 	then
@@ -847,51 +926,7 @@ EOF
 
 	sudo systemctl isolate multi-user.target
 	sudo systemctl isolate graphical.target
-
-	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
-
-    if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
-    then
-        echo "Failed to get the right dcv server tarball file to dowload and install. Aborting..."
-        exit 22
-    fi
-	wget --no-check-certificate $dcv_server
-	if [[ "$?" -eq "0" ]]
-	then
-		cd
-		tar zxvf nice-dcv-*el${centos_version}*.tgz
-		rm -f nice-dcv-*el${centos_version}*.tgz
-		cd nice-dcv-*x86_64
-
-		sudo yum -y install nice-dcv-server-*.el${centos_version}.x86_64.rpm nice-xdcv-*.el${centos_version}.x86_64.rpm nice-dcv-web-viewer*.el${centos_version}.x86_64.rpm nice-dcv-gltest-*.el${centos_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${centos_version}.x86_64.rpm
-		if [[ "$?" -ne "0" ]]
-    	then
-        	echo "Failed to setup the DCV Server. Aborting..."
-        	exit 10
-    	fi
-		sudo systemctl isolate multi-user.target
-		sudo systemctl isolate graphical.target
-		cat << EOF | sudo tee /etc/dcv/dcv.conf
-[license]
-[log]
-[session-management]
-[session-management/defaults]
-[session-management/automatic-console-session]
-[display]
-[connectivity]
-web-port=$dcv_port
-[security]
-EOF
-		cd
-		sudo systemctl enable --now dcvserver
-	else
-		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
-		exit 1
-	fi
-
-    rm -rf nice-dcv-*x86_64
-	echo "Nice DCV service was installed. Please press enter to continue the installing process or ctrl+c to stop here."
-	read p
+    centosSetupNiceDcvServer
 }
 
 centosImportKey()
