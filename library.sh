@@ -737,7 +737,6 @@ EOF
     echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
     sudo rmmod nouveau
-    #TODO
 }
 
 centosSetupNvidiaDriver()
