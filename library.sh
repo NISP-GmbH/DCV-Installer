@@ -425,7 +425,7 @@ ubuntuSetupNiceDcvWithGpuNvidia()
     #TODO
 }
 
-ubuntuSetupNiceDcvWithoutGpuAmd()
+ubuntuSetupNiceDcvWithGpuAmd()
 {
     #TODO
 }
