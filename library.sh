@@ -372,6 +372,7 @@ ubuntuImportKey()
 ubuntuSetupRequiredPackages()
 {
     sudo apt update
+    export DEBIAN_FRONTEND=noninteractive
 
     case "${ubuntu_version}" in
         "18.04")
