@@ -977,6 +977,7 @@ setupSessionManagerCli()
     if [[ "$?" -eq "0" ]]
     then
 		unzip nice-dcv-session-manager-cli.zip
+        rm -f nice-dcv-session-manager-cli.zip
 		cd nice-dcv-session-manager-cli-*/
 		sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
 		dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
