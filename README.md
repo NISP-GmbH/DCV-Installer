@@ -16,6 +16,7 @@ The script to execute the DCV Session Manager is:
 ## Which services can be installed and configured
 
 - DCV Server without GPU support
+- DCV Server with GPU support (NVIDIA or AMD)
 - DCV Session Manager Broker
 - DCV Session Manager Agent
 - DCV Session Manager Gateway
@@ -23,7 +24,7 @@ The script to execute the DCV Session Manager is:
 - firewalld rules
 
 Notes:
-- For every service you will be  asked if you want to install or not. And for the services that you answer yes, you will be asked about the ports to be used.
+- For every service you will be asked if you want to install or not. And for the services that you answer yes, you will be asked about the ports to be used.
 - If you do not want to add firewalld rules, just answer no for firewall configuration.
 
 ## How to customize the DCV_Session_Manager_Installer.sh
