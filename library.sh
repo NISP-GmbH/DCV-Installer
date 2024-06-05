@@ -520,6 +520,9 @@ ubuntuSetupNiceDcvServer()
     sudo apt -y install pulseaudio-utils
 
     rm -rf nice-dcv-*64
+    createDcvSsl
+
+    sudo systemctl enable --now dcvserver
 }
 
 ubuntuSetupNiceDcvWithGpuNvidia()
@@ -804,6 +807,39 @@ centosSetupAmdDriver()
     #TODO
 }
 
+adaptColord()
+{
+    cat << EOF | sudo tee --append /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla
+[Allow Colord all Users]
+Identity=unix-user:*
+Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+}
+
+createDcvSsl()
+{
+    sudo openssl req -x509 -newkey rsa:4096 -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 365
+    sudo echo 'ca-file="/etc/dcv/cert.pem"  ' >> /etc/dcv/dcv.conf
+}
+
+centos7SpecificSettings()
+{
+    return 0
+}
+
+centos8SpecificSettings()
+{
+    adaptColord
+}
+
+centos9SpecificSettings()
+{
+    adaptColord
+}
+
 centosSetupNiceDcvServer()
 {
 	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
@@ -841,6 +877,7 @@ web-port=$dcv_port
 [security]
 EOF
 		cd
+        createDcvSsl
 		sudo systemctl enable --now dcvserver
 	else
 		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
@@ -848,6 +885,22 @@ EOF
 	fi
 
     rm -rf nice-dcv-*x86_64
+
+    if [[ "$centos_version" == "7" ]]
+    then
+        centos7SpecificSettings
+    else
+        if [[ "$centos_version" == "8" ]]
+        then
+            centos8SpecificSettings
+        else
+            if [[ "$centos_version" == "9" ]]
+            then
+                centos9SpecificSettings
+            fi
+        fi
+    fi
+
 	echo "Nice DCV service was installed. Please press enter to continue the installing process or ctrl+c to stop here."
 	read p
 }
