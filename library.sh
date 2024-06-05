@@ -420,6 +420,11 @@ ubuntuSetupRequiredPackages()
     sudo systemctl isolate graphical.target
 }
 
+ubuntuSetupNiceDcvWithGpuPrepareBase()
+{
+    #TODO
+}
+
 ubuntuSetupNiceDcvWithGpuNvidia()
 {
     if [[ $dcv_will_be_installed == "false" ]]
@@ -442,6 +447,7 @@ ubuntuSetupNiceDcvWithGpuNvidia()
         fi
     fi
 
+    ubuntuSetupNiceDcvWithGpuPrepareBase
     #TODO
 }
 
@@ -466,6 +472,8 @@ ubuntuSetupNiceDcvWithGpuAmd()
             fi
         fi
     fi
+
+    ubuntuSetupNiceDcvWithGpuPrepareBase
     #TODO
 }
 
@@ -702,6 +710,11 @@ ubuntuConfigureFirewall()
 	sudo iptables-save 
 }
 
+centosSetupNiceDcvWithGpuPrepareBase()
+{
+    #TODO
+}
+
 centosSetupNiceDcvWithGpuNvidia()
 {
     if [[ $dcv_will_be_installed == "false" ]]
@@ -723,6 +736,8 @@ centosSetupNiceDcvWithGpuNvidia()
             fi
         fi
     fi
+
+    centosSetupNiceDcvWithGpuPrepareBase
     #TODO
 }
 
@@ -747,6 +762,8 @@ centosSetupNiceDcvWithGpuAmd()
             fi
         fi
     fi
+
+    centosSetupNiceDcvWithGpuPrepareBase
     #TODO
 }
 
