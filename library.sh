@@ -377,18 +377,18 @@ ubuntuSetupRequiredPackages()
 
     case "${ubuntu_version}" in
         "18.04")
-            sudo apt install tasksel
+            sudo apt -y install tasksel
             sudo tasksel install ubuntu-desktop
             ;;
         "20.04")
-            sudo apt install ubuntu-desktop
-            sudo apt install gdm3
-            sudo apt upgrade
+            sudo apt -y install ubuntu-desktop
+            sudo apt -y install gdm3
+            sudo apt -y upgrade
             ;;
         "22.04")
-            sudo apt install ubuntu-desktop
-            sudo apt install gdm3
-            sudo apt upgrade
+            sudo apt -y install ubuntu-desktop
+            sudo apt -y install gdm3
+            sudo apt -y upgrade
             ;;
     esac
 
