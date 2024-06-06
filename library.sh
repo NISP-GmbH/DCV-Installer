@@ -525,10 +525,10 @@ ubuntuSetupNiceDcvServer()
             dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
             ;;
         "20.04")
-            dcv_server=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+            dcv_server=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
             ;;
         "22.04")
-            dcv_server=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+            dcv_server=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
             ;;
     esac
 
@@ -655,10 +655,10 @@ ubuntuSetupSessionManagerBroker()
             dcv_broker="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerBrokers/nice-dcv-session-manager-broker_2021.3.307-1_all.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_broker=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker i | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            dcv_broker=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker i | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
             ;;
         "22.04")
-            dcv_broker=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            dcv_broker=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
             ;;
     esac
 
@@ -678,10 +678,10 @@ ubuntuSetupSessionManagerAgent()
             dcv_agent="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_agent=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            dcv_agent=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
             ;;
         "22.04")
-            dcv_agent=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            dcv_agent=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
             ;;
     esac
 
@@ -764,10 +764,10 @@ ubuntuSetupSessionManagerGateway()
             dcv_gateway="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Gateway/nice-dcv-connection-gateway_2021.3.251-1_amd64.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_gateway=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            dcv_gateway=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
             ;;
         "22.04")
-            dcv_gateway=`curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1`
+            dcv_gateway=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
             ;;
     esac
 
@@ -882,7 +882,7 @@ centos9SpecificSettings()
 
 centosSetupNiceDcvServer()
 {
-	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
+	dcv_server=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
 
     if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
     then
@@ -1129,7 +1129,7 @@ centosSetupSessionManagerBroker()
 
     genericSetupSessionManagerBroker
 
-    dcv_broker=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
+    dcv_broker=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
 	wget --no-check-certificate $dcv_broker
 	
     if [[ "$?" -eq "0" ]]
@@ -1239,7 +1239,7 @@ centosSetupSessionManagerGateway()
 
     genericSetupSessionManagerGateway
 
-	dcv_gateway=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
+	dcv_gateway=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
 
 	wget --no-check-certificate $dcv_gateway
 
@@ -1285,7 +1285,7 @@ centosSetupSessionManagerAgent()
         return 0
     fi
 
-    dcv_agent=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1`
+    dcv_agent=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
     wget --no-check-certificate $dcv_agent
 
     if [[ "$?" -eq "0" ]]
