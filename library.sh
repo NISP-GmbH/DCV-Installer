@@ -344,7 +344,7 @@ askThePort()
 			port_tmp=$port_answer
 		fi
 
-		if [ "$port_tmp" -gt "1000" ] && [ "$port_tmp" -lt "65536" ]
+		if [ $port_tmp -gt 1000 ] && [ $port_tmp -lt 65536 ]
 		then
 			checkIfPortIsBeingUsed $port_tmp
 			if [[ "$port_used" == "0" ]]
