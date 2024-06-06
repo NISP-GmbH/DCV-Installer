@@ -428,7 +428,7 @@ ubuntuSetupNiceDcvWithGpuPrepareBase()
     sudo apt install -y mesa-utils
     sudo apt-get install -y gcc make linux-headers-$(uname -r)
 
-    if [ "`grep 'blacklist nouveau' /etc/modprobe.d/blacklist.conf`" == "" ]
+    if !  cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
     then  
         cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
 blacklist vga16fb
