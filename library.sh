@@ -846,6 +846,8 @@ centosSetupNvidiaDriver()
 
 centosSetupAmdDriver()
 {
+    echo "Not implemented yet. Aborting..."
+    exit 26
     #TODO
 }
 
