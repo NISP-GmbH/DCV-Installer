@@ -497,6 +497,8 @@ EOF
 
     if [ $ubuntu_major_version -eq 18 ]
     then
+        echo "Not implemented. Aborting..."
+        exit 25
         #TODO
     fi
 
