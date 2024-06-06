@@ -148,6 +148,7 @@ askAboutNiceDcvSetup()
     if echo $service_setup_answer | egrep -iq "yes"
     then
         dcv_will_be_installed="true"
+	    askThePort "Nice DCV"
         echo -e "Do you want to install ${GREEN}Nice DCV with GPU Support?${NC}?"
 	    readTheServiceSetupAnswer
         if echo $service_setup_answer | egrep -iq "yes"
@@ -177,8 +178,6 @@ askAboutNiceDcvSetup()
     else
         dcv_will_be_installed="false"
     fi
-
-	askThePort "Nice DCV"
 }
 
 installNiceDcvSetup()
