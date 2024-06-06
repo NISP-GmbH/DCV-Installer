@@ -452,6 +452,11 @@ EOF
 ubuntuSetupNvidiaDriver()
 {
     wget --no-check-certificate $url_nvidia_tesla_driver
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the NVIDIA Driver. Aborting..."
+        exit 30
+    fi
     sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s
     sudo nvidia-xconfig --preserve-busid --enable-all-gpus
     rm -f ./NVIDIA-Linux-x86_64*.run -s
@@ -474,6 +479,11 @@ EOF
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
         wget --no-check-certificate $url_amd_ubuntu_driver
+        if [[ "$?" -eq "0" ]]
+        then
+            echo "Failed to download the Ubuntu AMD driver. Aborting..."
+            exit 31
+        fi
         sudo apt -y install ./amdgpu-install*
         sudo apt -y install amdgpu-dkms
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
@@ -492,6 +502,11 @@ EOF
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
         wget --no-check-certificate $url_amd_ubuntu_driver
+        if [[ "$?" -eq "0" ]]
+        then
+            echo "Failed to download the Ubuntu AMD driver. Aborting..."
+            exit 32
+        fi
         sudo apt -y install ./amdgpu-install*
         sudo apt -y install amdgpu-dkms
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
@@ -668,6 +683,11 @@ ubuntuSetupSessionManagerBroker()
     esac
 
     wget --no-check-certificate $dcv_broker
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv broker package to setup the service. Aborting..."
+        exit 26
+    fi
     sudo apt install -y ./nice-dcv-session-manager-broker*ubuntu*.deb
     rm -f nice-dcv-session-manager-broker*ubuntu*.deb
 }
@@ -691,6 +711,11 @@ ubuntuSetupSessionManagerAgent()
     esac
 
     wget --no-check-certificate $dcv_agent
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv agent package to setup the service. Aborting..."
+        exit 28
+    fi
     sudo apt install -y ./nice-dcv-session-manager-agent*.deb
     rm -f ./nice-dcv-session-manager-agent*.deb
 
@@ -777,6 +802,11 @@ ubuntuSetupSessionManagerGateway()
     esac
 
     wget --no-check-certificate $dcv_gateway
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv gateway package to setup the service. Aborting..."
+        exit 28
+    fi
     sudo apt install -y ./nice-dcv-connection-gateway*.deb
     rm -f ./nice-dcv-connection-gateway*.deb
 
@@ -842,6 +872,11 @@ EOF
 centosSetupNvidiaDriver()
 {
     wget --no-check-certificate $url_nvidia_tesla_driver
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the NVIDIA driver. Aborting..."
+        exit 29
+    fi
     sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s
     sudo nvidia-xconfig --preserve-busid --enable-all-gpus
     rm -f ./NVIDIA-Linux-x86_64*.run -s
@@ -1391,6 +1426,11 @@ setupSessionManagerCli()
 {
     cd
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the Session Manager CLI package. Aborting..."
+        exit 32
+    fi
     if [[ "$?" -eq "0" ]]
     then
 		unzip nice-dcv-session-manager-cli.zip
