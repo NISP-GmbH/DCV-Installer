@@ -159,10 +159,12 @@ askAboutNiceDcvSetup()
             then
                 dcv_gpu_type="nvidia"
             else
-                echo -e "Do you want to install ${GREEN}Nice DCV with AMD/RadeonD Support?${NC}?"
+                echo -e "Do you want to install ${GREEN}Nice DCV with AMD/Radeon Support?${NC}?"
 	            readTheServiceSetupAnswer
                 if echo $service_setup_answer | egrep -iq "yes"
                 then
+                    echo "Currently AMD driver is not supported by this script. Please send an e-mail to info@ni-sp.com if you are interested."
+                    exit 26
                     dcv_gpu_type="amd"
                 else
                     echo -e "You did not select a NVIDIA or AMD/Radeon support. This setup can not continue. Aborting..."
