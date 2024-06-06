@@ -160,6 +160,7 @@ askAboutNiceDcvSetup()
                 dcv_gpu_type="nvidia"
             else
                 echo -e "Do you want to install ${GREEN}Nice DCV with AMD/RadeonD Support?${NC}?"
+	            readTheServiceSetupAnswer
                 if echo $service_setup_answer | egrep -iq "yes"
                 then
                     dcv_gpu_type="amd"
