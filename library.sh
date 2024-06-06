@@ -428,7 +428,7 @@ ubuntuSetupNiceDcvWithGpuPrepareBase()
     sudo apt install -y mesa-utils
     sudo apt-get install -y gcc make linux-headers-$(uname -r)
 
-    if !  cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
+    if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
     then  
         cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
 blacklist vga16fb
@@ -439,7 +439,7 @@ blacklist rivatv
 EOF
     fi
 
-    if [ "`grep 'rdblacklist=nouveau' /etc/default/grub`" == "" ]
+    if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
     then  
         echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
         sudo update-grub
