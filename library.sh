@@ -609,6 +609,7 @@ ubuntuSetupNiceDcvWithGpuNvidia()
     ubuntuSetupNiceDcvWithGpuPrepareBase
     ubuntuSetupNvidiaDriver
     ubuntuSetupNiceDcvServer
+    finishNiceDcvServerSetup
 }
 
 ubuntuSetupNiceDcvWithGpuAmd()
@@ -636,6 +637,7 @@ ubuntuSetupNiceDcvWithGpuAmd()
     ubuntuSetupNiceDcvWithGpuPrepareBase
     ubuntuSetupAmdDriver
     ubuntuSetupNiceDcvServer
+    finishNiceDcvServerSetup
 }
 
 ubuntuSetupNiceDcvWithoutGpu()
@@ -658,6 +660,7 @@ ubuntuSetupNiceDcvWithoutGpu()
     sudo systemctl get-default
     sudo systemctl set-default graphical.target
     sudo systemctl isolate graphical.target
+    finishNiceDcvServerSetup
 }
 
 ubuntuSetupSessionManagerBroker()
@@ -906,6 +909,14 @@ createDcvSsl()
     sudo echo 'ca-file="/etc/dcv/cert.pem"  ' >> /etc/dcv/dcv.conf
 }
 
+finishNiceDcvServerSetup()
+{
+	echo "NICE DCV Server service was installed."
+    echo "You do not need the Session Manager components to have DCV Server working, but if you have a reason for that, this script will offer to setup those components."
+    echo "Please press enter to continue if you want to setup the Session Manager components or ctrl+c to stop here. Is safe to quit from here."
+    read p
+}
+
 centos7SpecificSettings()
 {
     return 0
@@ -981,9 +992,6 @@ EOF
             fi
         fi
     fi
-
-	echo "Nice DCV service was installed. Please press enter to continue the installing process or ctrl+c to stop here."
-	read p
 }
 
 centosSetupNiceDcvWithGpuNvidia()
@@ -1011,6 +1019,7 @@ centosSetupNiceDcvWithGpuNvidia()
     centosSetupNiceDcvWithGpuPrepareBase
     centosSetupNvidiaDriver
     centosSetupNiceDcvServer
+    finishNiceDcvServerSetup
 }
 
 centosSetupNiceDcvWithGpuAmd()
@@ -1038,6 +1047,7 @@ centosSetupNiceDcvWithGpuAmd()
     centosSetupNiceDcvWithGpuPrepareBase
     centosSetupAmdDriver
     centosSetupNiceDcvServer
+    finishNiceDcvServerSetup
 }
 
 centosSetupNiceDcvWithoutGpu()
@@ -1118,6 +1128,7 @@ EOF
 	sudo systemctl isolate multi-user.target
 	sudo systemctl isolate graphical.target
     centosSetupNiceDcvServer
+    finishNiceDcvServerSetup
 }
 
 centosImportKey()
@@ -1546,15 +1557,15 @@ announceHowTheScriptWorks()
     echo -e "${GREEN}#####################################################################"
     echo -e          "  Welcome to the NICE DCV Session Manager Installation Script"
     echo -e 
-    echo -e "  The script will install and setup DCV without GPU, DCV Session" 
+    echo -e "  The script can install and setup DCV with and without GPU, DCV Session" 
     echo -e         "  Manager Broker, Agent, Gateway and CLI based on your selection."
     echo 
     echo -e         "  NI SP GmbH / info@ni-sp.com / www.ni-sp.com " 
     echo -e         "#####################################################################${NC}"
     echo
-    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (without GPU support). If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
+    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (with and without GPU support). If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
     echo
-    echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV. We will avoid to use ports already in use in your system."
+    echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV port. We will avoid to use ports already in use in your system. If you have a fresh install and is not an IT person, just continue with all default values."
     echo
     echo "Press enter to continue the setup or ctrl+c to cancel."
     read p
