@@ -14,31 +14,65 @@
 # deriving from the use or misuse of this information.
 ################################################################################
 
-# The script will use the latest versions from thte download section
 
-DCV_VERSION=2023.1
-#DCV_SM_BROKER_VERSION=2023.1.410-1
-#DCV_SM_AGENT_VERSION=2023.1.732-1
-#DCV_SM_GW_VERSION=2023.1.710-1
-#DCV_SM_CLI_VERSION=1.1.0-140
-#DCV_SM_BROKER_VERSION=""
-#DCV_SM_AGENT_VERSION=""
-#DCV_SM_GW_VERSION=""
-#DCV_SM_CLI_VERSION=""
-
-checkCentosVersion()
+checkLinuxDistro()
 {
-	if [ -f /etc/centos-release ]
-	then
-		if ! cat /etc/centos-release | egrep -iq 8
-		then
-			echo "At the moment this script just support CentOS 8. Aborting..."
-			exit 18		
-		fi
-	else
-		echo "At the moment we just support CentOS distro. Aborting..."
-		exit 19
-	fi
+    echo "If you know what you are doing, please use --force option to avoid our Linux Distro compatibility test."
+    if [ -f /etc/centos-release ]
+    then
+        centos_distro="true"
+        if cat /etc/centos-release | egrep -iq "(7|8|9)"
+        then
+            if cat /etc/centos-release | egrep -iq "7"
+            then
+                centos_version=7
+            else
+                if cat /etc/centos-release | egrep -iq "8"
+                then
+                    centos_version=8
+                else
+                    if cat /etc/centos-release | egrep -iq "9"
+                    then
+                        centos_version=9
+                    else
+                        echo "Your RedHat Based Linux distro version..."
+                        cat /etc/centos-release
+                        echo "is not supported. Aborting..."
+                        exit 18
+                    fi
+                fi
+            fi
+        else
+            echo "Your RedHat Based Linux distro..."
+            cat /etc/centos-release
+            echo "is not supported. Aborting..."
+            exit 19
+        fi
+    else
+        if [ -f /etc/debian_version ]
+        then
+            if cat /etc/issue | egrep -iq "ubuntu"
+            then
+                ubuntu_distro="true"
+                ubuntu_version=$(lsb_release -rs)
+                ubuntu_major_version=$(echo $ubuntu_version | cut -d '.' -f 1)
+                ubuntu_minor_version=$(echo $ubuntu_version | cut -d '.' -f 2)
+                if ( [[ $ubuntu_major_version -lt 18 ]] || [[ $ubuntu_major_version -gt 24  ]] ) && [[ $ubuntu_minor_version -ne 04 ]]
+                then
+                    echo "Your Ubuntu version >>> $ubuntu_version <<< is not supported. Aborting..."
+                    exit 20
+                fi
+            else
+                echo "Your Debian Based Linxu distro is not supported."
+                echo "Aborting..."
+                exit 21
+            fi
+        else
+            echo "Not able to find which distro you are using."
+            echo "Aborting..."
+            exit 22
+        fi
+    fi
 }
 
 disableIpv6()
@@ -69,15 +103,22 @@ readTheServiceSetupAnswer()
 	service_setup_answer=$(echo $service_setup_answer | tr '[:upper:]' '[:lower:]')
 }
 
+askAllQuestions()
+{
+    askAboutServiceSetup "dcv"
+    askAboutServiceSetup "broker"
+    askAboutServiceSetup "agent"
+    askAboutServiceSetup "cli"
+    askAboutServiceSetup "gateway"
+    askAboutServiceSetup "firewall"
+}
+
 askAboutServiceSetup()
 {
 	service_name=$1
     if echo $service_name | egrep -iq "dcv"
     then
-	        echo 
-		echo -e "Do you want to install ${GREEN}Nice DCV (without gpu support)${NC}?"
-		readTheServiceSetupAnswer
-		nice_dcv_server_install_answer=$service_setup_answer
+        askAboutNiceDcvSetup
     elif echo $service_name | egrep -iq "agent"
     then
 	        echo 
@@ -113,6 +154,98 @@ askAboutServiceSetup()
 		exit 17
 	fi
 
+}
+
+askAboutNiceDcvSetup()
+{
+    echo 
+    echo -e "Do you want to install ${GREEN}Nice DCV (with or without gpu support)${NC}?"
+	readTheServiceSetupAnswer
+    if echo $service_setup_answer | egrep -iq "yes"
+    then
+        dcv_will_be_installed="true"
+	    askThePort "Nice DCV"
+        echo -e "Do you want to install ${GREEN}Nice DCV with GPU Support?${NC}?"
+	    readTheServiceSetupAnswer
+        if echo $service_setup_answer | egrep -iq "yes"
+        then
+            dcv_gpu_support="true"
+            echo -e "Do you want to install ${GREEN}Nice DCV with Nvidia Support?${NC}?"
+	        readTheServiceSetupAnswer
+            if echo $service_setup_answer | egrep -iq "yes"
+            then
+                dcv_gpu_type="nvidia"
+            else
+                echo -e "Do you want to install ${GREEN}Nice DCV with AMD/Radeon Support?${NC}?"
+	            readTheServiceSetupAnswer
+                if echo $service_setup_answer | egrep -iq "yes"
+                then
+                    echo "Currently AMD driver is not supported by this script. Please send an e-mail to info@ni-sp.com if you are interested."
+                    exit 26
+                    dcv_gpu_type="amd"
+                else
+                    echo -e "You did not select a NVIDIA or AMD/Radeon support. This setup can not continue. Aborting..."
+                    exit 24
+                fi
+            fi
+        else
+            dcv_gpu_support="false"
+        fi
+    else
+        dcv_will_be_installed="false"
+    fi
+}
+
+installNiceDcvSetup()
+{
+    # if dcv server will be installed
+    if [[ "$dcv_will_be_installed" == "true" ]]
+    then
+        # if dcv server will have gpu support
+        if [[ "$dcv_gpu_support" == "true" ]]
+        then
+            # if dcv server driver support will be nvidia
+            if [[ "$dcv_gpu_type" == "nvidia" ]]
+            then
+                if [[ "$centos_distro" == "true" ]]
+                then
+                    centosSetupNiceDcvWithGpuNvidia
+                else
+                    if [[ "$ubuntu_distro" == "true" ]]
+                    then
+                        ubuntuSetupNiceDcvWithGpuNvidia
+                    fi
+                fi
+            # if the dcv driver support will be amd
+            else
+                # if dcv server driver support will be amd
+                if [[ "$dcv_gpu_type" == "amd" ]]
+                then
+                    if [[ "$centos_distro" == "true" ]]
+                    then
+                        centosSetupNiceDcvWithGpuAmd
+                    else
+                        if [[ "$ubuntu_distro" == "true" ]]
+                        then
+                           ubuntuSetupNiceDcvWithGpuAmd
+                        fi
+                    fi
+                fi
+            fi           
+        # if dcv server will not have gpu support
+        else
+            if [[ "$centos_distro" == "true" ]]
+            then
+                centosSetupNiceDcvWithoutGpu
+            else
+                if [[ "$ubuntu_distro" == "true" ]]
+                then
+                    ubuntuSetupNiceDcvWithoutGpu
+                fi
+            fi
+        fi
+
+    fi
 }
 
 checkIfPortIsBeingUsed()
@@ -226,7 +359,7 @@ askThePort()
 			port_tmp=$port_answer
 		fi
 
-		if [ "$port_tmp" -gt "1000" ] && [ "$port_tmp" -lt "65536" ]
+		if [ $port_tmp -gt 1000 ] && [ $port_tmp -lt 65536 ]
 		then
 			checkIfPortIsBeingUsed $port_tmp
 			if [[ "$port_used" == "0" ]]
@@ -247,11 +380,753 @@ askThePort()
 	setThePort "$service_name" $port_tmp
 }
 
-setupNiceDcvWithoutGpu()
+ubuntuImportKey()
 {
-	echo -e "The script will setup ${GREEN}Nice DCV (without gpu support)${NC}."
-	askThePort "Nice DCV"
-		
+    wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+    sudo gpg --import NICE-GPG-KEY
+    rm -f NICE-GPG-KEY
+}
+
+ubuntuSetupRequiredPackages()
+{
+    sudo apt update
+    export DEBIAN_FRONTEND=noninteractive
+
+    case "${ubuntu_version}" in
+        "18.04")
+            sudo apt -y install tasksel
+            sudo tasksel install ubuntu-desktop
+            ;;
+        "20.04")
+            sudo apt -y install ubuntu-desktop
+            sudo apt -y install gdm3
+            sudo apt -y upgrade
+            ;;
+        "22.04")
+            sudo apt -y install ubuntu-desktop
+            sudo apt -y install gdm3
+            sudo apt -y upgrade
+            ;;
+    esac
+
+    if [ -f /etc/gdm3/custom.conf ]
+    then
+
+        gdm3_file="/etc/gdm3/custom.conf"
+        if [ -f $gdm3_file ]
+        then
+            target_line="WaylandEnable=false"
+
+            sudo cp "$gdm3_file" "${gdm3_file}.bak"
+
+            sudo awk -v target="$TARGET_LINE" '
+    BEGIN { in_daemon = 0; inserted = 0 }
+    /^\[daemon\]/ { in_daemon = 1 }
+    in_daemon && /^$/ { in_daemon = 0 }
+    in_daemon && /WaylandEnable/ { $0 = target; inserted = 1 }
+    { print }
+    END {
+        if (in_daemon && !inserted) {
+            print target
+        }
+    }
+' "$gdm3_file" > "$gdm3_file.tmp"
+        fi
+        sudo mv "${gdm3_file}.tmp" "$gdm3_file"
+    fi
+
+    sudo systemctl restart gdm3
+    sudo systemctl get-default
+    sudo systemctl set-default graphical.target
+    sudo systemctl isolate graphical.target
+}
+
+ubuntuSetupNiceDcvWithGpuPrepareBase()
+{
+    sudo apt install -y mesa-utils
+    sudo apt-get install -y gcc make linux-headers-$(uname -r)
+
+    if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
+    then  
+        cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
+blacklist vga16fb
+blacklist nouveau
+blacklist rivafb
+blacklist nvidiafb
+blacklist rivatv
+EOF
+    fi
+
+    if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
+    then  
+        echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
+        sudo update-grub
+    fi
+}
+
+ubuntuSetupNvidiaDriver()
+{
+    wget --no-check-certificate $url_nvidia_tesla_driver
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the NVIDIA Driver. Aborting..."
+        exit 30
+    fi
+    sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s
+    sudo nvidia-xconfig --preserve-busid --enable-all-gpus
+    rm -f ./NVIDIA-Linux-x86_64*.run -s
+}
+
+ubuntuSetupAmdDriver()
+{
+    sudo apt -y install gcc make awscli bc sharutils
+    sudo apt -y install linux-modules-extra-$(uname -r) linux-firmware
+    if [ $ubuntu_major_version -eq 22 ]
+    then
+        sudo apt -y install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext
+        cat << EOF | sudo tee --append /etc/X11/xorg.conf.d/20-amdgpu.conf
+Section "Device"
+    Identifier "AMD"
+    Driver "amdgpu"
+EndSection
+EOF
+        cat << EOF | sudo tee --append /etc/modprobe.d/20-amdgpu.conf
+options amdgpu virtual_display=0000:00:1e.0,2
+EOF
+        wget --no-check-certificate $url_amd_ubuntu_driver
+        if [[ "$?" -eq "0" ]]
+        then
+            echo "Failed to download the Ubuntu AMD driver. Aborting..."
+            exit 31
+        fi
+        sudo apt -y install ./amdgpu-install*
+        sudo apt -y install amdgpu-dkms
+        sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
+    fi
+
+    if [ $ubuntu_major_version -eq 20 ]
+    then
+        sudo apt -y install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext
+        cat <<EOF> /usr/share/X11/xorg.conf.d/20-amdgpu.conf
+Section "Device"
+    Identifier "AMD"
+    Driver "amdgpu"
+EndSection
+EOF
+        cat <<EOF> /etc/modprobe.d/20-amdgpu.conf
+options amdgpu virtual_display=0000:00:1e.0,2
+EOF
+        wget --no-check-certificate $url_amd_ubuntu_driver
+        if [[ "$?" -eq "0" ]]
+        then
+            echo "Failed to download the Ubuntu AMD driver. Aborting..."
+            exit 32
+        fi
+        sudo apt -y install ./amdgpu-install*
+        sudo apt -y install amdgpu-dkms
+        sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
+
+    fi
+
+    if [ $ubuntu_major_version -eq 18 ]
+    then
+        echo "Not implemented. Aborting..."
+        exit 25
+        #TODO
+    fi
+
+    if [ -f /etc/X11/xorg.conf ]
+    then
+        rm -f /etc/X11/xorg.conf
+    fi
+
+    compileAndSetupRadeonTop
+}
+
+compileAndSetupRadeonTop()
+{
+    git clone https://github.com/clbr/radeontop.git
+    cd radeontop
+    sudo make
+    sudo make install
+    cd ..
+    sudo rm -rf radeontop
+}
+
+ubuntuSetupNiceDcvServer()
+{
+    case "${ubuntu_version}" in
+        "18.04")
+            dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
+            ;;
+        "20.04")
+            dcv_server=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
+            ;;
+        "22.04")
+            dcv_server=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
+            ;;
+    esac
+
+    wget --no-check-certificate $dcv_server
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
+        exit 23
+    fi 
+    tar zxvf nice-dcv-*ubun*.tgz
+    rm -f nice-dcv-*.tgz
+    cd nice-dcv-*64
+
+    sudo apt -y install ./nice-dcv-server*
+    sudo apt -y install ./nice-dcv-web-viewer*
+    sudo usermod -aG video dcv
+    sudo apt -y install ./nice-xdcv*
+    sudo apt -y install ./nice-dcv-gl*
+    sudo apt -y install ./nice-dcv-simple-external-authenticato*
+    sudo apt -y install dkms
+    sudo dcvusbdriverinstaller --quiet
+    sudo apt -y install pulseaudio-utils
+
+    rm -rf nice-dcv-*64
+    createDcvSsl
+
+    sudo sed -ie 's/#owner = ""/owner = "ubuntu"/' /etc/dcv/dcv.conf
+    sudo sed -ie 's/#create-session = true/create-session = true/' /etc/dcv/dcv.conf
+    sudo sed -ie 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
+    sudo systemctl isolate multi-user.target
+    sudo dcvgladmin enable
+    sudo systemctl isolate graphical.target
+    sudo systemctl enable --now dcvserver
+}
+
+ubuntuSetupNiceDcvWithGpuNvidia()
+{
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "nvidia" ]]
+            then
+                return 0
+            else
+                if [[ $ubuntu_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
+    ubuntuSetupNiceDcvWithGpuPrepareBase
+    ubuntuSetupNvidiaDriver
+    ubuntuSetupNiceDcvServer
+    finishNiceDcvServerSetup
+}
+
+ubuntuSetupNiceDcvWithGpuAmd()
+{
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "amd" ]]
+            then
+                return 0
+            else
+                if [[ $ubuntu_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
+    ubuntuSetupNiceDcvWithGpuPrepareBase
+    ubuntuSetupAmdDriver
+    ubuntuSetupNiceDcvServer
+    finishNiceDcvServerSetup
+}
+
+ubuntuSetupNiceDcvWithoutGpu()
+{
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "true" ]]
+        then
+            return 0
+        else
+            if [[ $ubuntu_distro == "false" ]]
+            then
+                return 0
+            fi
+        fi
+    fi
+
+    ubuntuSetupNiceDcvServer
+
+    sudo apt -y install xserver-xorg-video-dummy
+
+	if [ -f /etc/X11/xorg.conf  ] 
+	then
+		sudo cp /etc/X11/xorg.conf /etc/X11/xorg.conf-BACKUP
+	fi
+
+	cat << EOF | sudo tee /etc/X11/xorg.conf
+Section "Device"
+    Identifier "DummyDevice"
+    Driver "dummy"
+    Option "ConstantDPI" "true"
+    Option "IgnoreEDID" "true"
+    Option "NoDDC" "true"
+    VideoRam 2048000
+EndSection
+
+Section "Monitor"
+    Identifier "DummyMonitor"
+    HorizSync   5.0 - 1000.0
+    VertRefresh 5.0 - 200.0
+    Modeline "1920x1080" 23.53 1920 1952 2040 2072 1080 1106 1108 1135
+    Modeline "1600x900" 33.92 1600 1632 1760 1792 900 921 924 946
+    Modeline "1440x900" 30.66 1440 1472 1584 1616 900 921 924 946
+    ModeLine "1366x768" 72.00 1366 1414 1446 1494  768 771 777 803
+    Modeline "1280x800" 24.15 1280 1312 1400 1432 800 819 822 841
+    Modeline "1024x768" 18.71 1024 1056 1120 1152 768 786 789 807
+EndSection
+
+Section "Screen"
+    Identifier "DummyScreen"
+    Device "DummyDevice"
+    Monitor "DummyMonitor"
+    DefaultDepth 24
+    SubSection "Display"
+        Viewport 0 0
+        Depth 24
+        Modes "1920x1080" "1600x900" "1440x900" "1366x768" "1280x800" "1024x768"
+        virtual 1920 1080
+    EndSubSection
+EndSection
+EOF
+
+    sudo systemctl get-default
+    sudo systemctl set-default graphical.target
+    sudo systemctl isolate graphical.target
+    finishNiceDcvServerSetup
+}
+
+ubuntuSetupSessionManagerBroker()
+{
+    if [[ $nice_dcv_broker_install_answer != "yes" ]]
+    then
+        return 0
+   fi
+
+    genericSetupSessionManagerBroker
+
+    case "${ubuntu_version}" in
+        "18.04")
+            dcv_broker="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerBrokers/nice-dcv-session-manager-broker_2021.3.307-1_all.ubuntu1804.deb"
+            ;;
+        "20.04")
+            dcv_broker=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker i | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            ;;
+        "22.04")
+            dcv_broker=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            ;;
+    esac
+
+    wget --no-check-certificate $dcv_broker
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv broker package to setup the service. Aborting..."
+        exit 26
+    fi
+    sudo apt install -y ./nice-dcv-session-manager-broker*ubuntu*.deb
+    rm -f nice-dcv-session-manager-broker*ubuntu*.deb
+}
+
+ubuntuSetupSessionManagerAgent()
+{
+    if [[ $nice_dcv_agent_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+    case "${ubuntu_version}" in
+        "18.04")
+            dcv_agent="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
+            ;;
+        "20.04")
+            dcv_agent=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            ;;
+        "22.04")
+            dcv_agent=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            ;;
+    esac
+
+    wget --no-check-certificate $dcv_agent
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv agent package to setup the service. Aborting..."
+        exit 28
+    fi
+    sudo apt install -y ./nice-dcv-session-manager-agent*.deb
+    rm -f ./nice-dcv-session-manager-agent*.deb
+
+	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
+	
+	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
+version = '0.1'
+[agent]
+
+# hostname or IP of the broker. This parameter is mandatory.
+# broker_host = 'localhost'
+
+# The port of the broker. Default: 8445
+broker_port = $agent_to_broker_port
+broker_host = "$broker_hostname"         # it could be the case that you need to remove the previous broker_host config to active this one
+
+# CA used to validate the certificate of the broker.
+# ca_file = 'ca-cert.pem'
+ca_file = '/etc/dcv-session-manager-agent/dcvsmbroker_ca.pem'
+
+# Set to false to accept invalid certificates. True by default.
+tls_strict = false
+
+# Folder on the file system from which the tag files are read.
+# Default: '/etc/dcv-session-manager-agent/tags/' on Linux and
+# '<INSTALLATION_DIR>/conf/tags/' on Windows.
+#tags_folder =
+
+# Folder on the file system which contains scripts allowed to
+# customize the initialization of desktop environment used by
+# DCV for Linux Virtual sessions.
+# Default: '/var/lib/dcv-session-manager-agent/init/'
+#init_folder =
+
+# Folder on the file system which contains scripts and apps
+# allowed to be automatically executed at session startup.
+# Default: '/var/lib/dcv-session-manager-agent/autorun/' on Linux and
+# 'C:\ProgramData\NICE\DCVSessionManagerAgent\autorun' on Windows.
+#autorun_folder =
+
+# DCV server cli root path
+# Default: '/usr/bin/dcv' on Linux and
+dcv_root = '/usr/bin/dcv'
+
+[log]
+
+# log verbosity. Default: 'info'
+#level = 'debug'
+
+# Directory used for the logs.
+# Default: '/var/log/dcv-session-manager-agent/' on Linux and
+directory = '/var/log/dcv-session-manager-agent/'
+
+# log rotation. Default: daily
+#rotation = 'daily'
+# tls_strict = false
+EOF
+
+	sudo cp /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+	sudo systemctl restart dcv-session-manager-broker
+	sudo systemctl enable --now dcv-session-manager-agent
+}
+
+ubuntuSetupSessionManagerGateway()
+{
+    if [[ $nice_dcv_gateway_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
+    genericSetupSessionManagerGateway
+
+    case "${ubuntu_version}" in
+
+        "18.04")
+            dcv_gateway="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Gateway/nice-dcv-connection-gateway_2021.3.251-1_amd64.ubuntu1804.deb"
+            ;;
+        "20.04")
+            dcv_gateway=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            ;;
+        "22.04")
+            dcv_gateway=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            ;;
+    esac
+
+    wget --no-check-certificate $dcv_gateway
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the right dcv gateway package to setup the service. Aborting..."
+        exit 28
+    fi
+    sudo apt install -y ./nice-dcv-connection-gateway*.deb
+    rm -f ./nice-dcv-connection-gateway*.deb
+
+    cat << EOF | sudo tee $dcv_gateway_config_file
+[gateway]
+web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
+quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
+cert-file = "$dcv_gateway_key"
+cert-key-file = "$dcv_gateway_cert"
+
+[resolver]
+url = "https://localhost:${gateway_resolver_port}"
+
+[web-resources]
+url = "https://localhost:${gateway_web_resources}"
+EOF
+    sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
+    sudo sed -i "s/^#gatewayhttpsport.*/gateway-to-broker-connector-https-port = $gateway_to_broker_port/" $dcv_broker_config_file
+    sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
+    sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
+    sudo systemctl restart dcv-session-manager-broker
+}
+
+ubuntuConfigureFirewall()
+{
+    if [[ $nice_dcv_firewall_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+    sudo apt -y install firewalld
+
+    setFirewalldRules
+	sudo iptables-save 
+}
+
+centosSetupNiceDcvWithGpuPrepareBase()
+{
+    # upgrade
+    sudo yum upgrade -y
+
+    # setup server GUI
+    sudo yum groupinstall 'Server with GUI' -y
+    sudo systemctl get-default
+    sudo systemctl set-default graphical.target
+    sudo systemctl isolate graphical.target
+    sudo yum install glx-utils -y
+
+    # prepare to setup nvidia driver
+    sudo yum erase nvidia cuda
+    sudo yum install -y make gcc kernel-devel-$(uname -r) wget
+    cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
+blacklist vga16fb
+blacklist nouveau
+blacklist rivafb
+blacklist nvidiafb
+blacklist rivatv
+EOF
+    echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    sudo rmmod nouveau
+}
+
+centosSetupNvidiaDriver()
+{
+    wget --no-check-certificate $url_nvidia_tesla_driver
+    if [[ "$?" -eq "0" ]]
+    then
+        echo "Failed to download the NVIDIA driver. Aborting..."
+        exit 29
+    fi
+    sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s
+    sudo nvidia-xconfig --preserve-busid --enable-all-gpus
+    rm -f ./NVIDIA-Linux-x86_64*.run -s
+}
+
+centosSetupAmdDriver()
+{
+    echo "Not implemented yet. Aborting..."
+    exit 26
+    #TODO
+}
+
+adaptColord()
+{
+    cat << EOF | sudo tee --append /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla
+[Allow Colord all Users]
+Identity=unix-user:*
+Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+}
+
+createDcvSsl()
+{
+    sudo openssl req -x509 -newkey rsa:4096 -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 365
+    sudo echo 'ca-file="/etc/dcv/cert.pem"  ' >> /etc/dcv/dcv.conf
+}
+
+finishNiceDcvServerSetup()
+{
+	echo "NICE DCV Server service was installed."
+    echo "You do not need the Session Manager components to have DCV Server working, but if you have a reason for that, this script will offer to setup those components."
+    echo "Please press enter to continue if you want to setup the Session Manager components or ctrl+c to stop here. Is safe to quit from here."
+    read p
+}
+
+centos7SpecificSettings()
+{
+    return 0
+}
+
+centos8SpecificSettings()
+{
+    adaptColord
+}
+
+centos9SpecificSettings()
+{
+    adaptColord
+}
+
+centosSetupNiceDcvServer()
+{
+	dcv_server=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
+
+    if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
+    then
+        echo "Failed to get the right dcv server tarball file to dowload and install. Aborting..."
+        exit 22
+    fi
+	wget --no-check-certificate $dcv_server
+	if [[ "$?" -eq "0" ]]
+	then
+		cd
+		tar zxvf nice-dcv-*el${centos_version}*.tgz
+		rm -f nice-dcv-*el${centos_version}*.tgz
+		cd nice-dcv-*x86_64
+
+		sudo yum -y install nice-dcv-server-*.el${centos_version}.x86_64.rpm nice-xdcv-*.el${centos_version}.x86_64.rpm nice-dcv-web-viewer*.el${centos_version}.x86_64.rpm nice-dcv-gltest-*.el${centos_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${centos_version}.x86_64.rpm
+		if [[ "$?" -ne "0" ]]
+    	then
+        	echo "Failed to setup the DCV Server. Aborting..."
+        	exit 10
+    	fi
+		sudo systemctl isolate multi-user.target
+		sudo systemctl isolate graphical.target
+		cat << EOF | sudo tee /etc/dcv/dcv.conf
+[license]
+[log]
+[session-management]
+[session-management/defaults]
+[session-management/automatic-console-session]
+[display]
+[connectivity]
+web-port=$dcv_port
+[security]
+EOF
+		cd
+        createDcvSsl
+		sudo systemctl enable --now dcvserver
+	else
+		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
+		exit 1
+	fi
+
+    rm -rf nice-dcv-*x86_64
+
+    if [[ "$centos_version" == "7" ]]
+    then
+        centos7SpecificSettings
+    else
+        if [[ "$centos_version" == "8" ]]
+        then
+            centos8SpecificSettings
+        else
+            if [[ "$centos_version" == "9" ]]
+            then
+                centos9SpecificSettings
+            fi
+        fi
+    fi
+}
+
+centosSetupNiceDcvWithGpuNvidia()
+{
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "nvidia" ]]
+            then
+                return 0
+            else
+                if [[ $centos_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
+    centosSetupNiceDcvWithGpuPrepareBase
+    centosSetupNvidiaDriver
+    centosSetupNiceDcvServer
+    finishNiceDcvServerSetup
+}
+
+centosSetupNiceDcvWithGpuAmd()
+{
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "false" ]]
+        then
+            return 0
+        else
+            if [[ $dcv_gpu_type != "amd" ]]
+            then
+                return 0
+            else
+                if [[ $centos_distro == "false" ]]
+                then
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
+    centosSetupNiceDcvWithGpuPrepareBase
+    centosSetupAmdDriver
+    centosSetupNiceDcvServer
+    finishNiceDcvServerSetup
+}
+
+centosSetupNiceDcvWithoutGpu()
+{
+    if [[ $dcv_will_be_installed == "false" ]]
+    then
+        return 0
+    else
+        if [[ $dcv_gpu_support == "true" ]]
+        then
+            return 0
+        else
+            if [[ $centos_distro == "false" ]]
+            then
+                return 0
+            fi
+        fi
+    fi
+	
 	sudo yum -y groupinstall 'Server with GUI'
 	if [[ "$?" -ne "0" ]]
 	then
@@ -312,49 +1187,16 @@ EOF
 
 	sudo systemctl isolate multi-user.target
 	sudo systemctl isolate graphical.target
-	
-	dcv_version="2023"
-	dcv_server=`curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el8" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1`
-
-	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY # allow the package manager to verify the signature
-	wget --no-check-certificate $dcv_server
-	if [[ "$?" -eq "0" ]]
-	then
-		cd
-		tar zxvf nice-dcv-*el8*.tgz
-		rm -f nice-dcv-*el8*.tgz
-		cd nice-dcv-*x86_64
-		sudo yum -y install nice-dcv-server-*.el8.x86_64.rpm nice-xdcv-*.el8.x86_64.rpm nice-dcv-web-viewer*.el8.x86_64.rpm nice-dcv-gltest-*.el8.x86_64.rpm nice-dcv-simple-external-authenticator-*.el8.x86_64.rpm
-		if [[ "$?" -ne "0" ]]
-    	then
-        	echo "Failed to setup the DCV Server. Aborting..."
-        	exit 10
-    	fi
-		sudo systemctl isolate multi-user.target
-		sudo systemctl isolate graphical.target
-		cat << EOF | sudo tee /etc/dcv/dcv.conf
-[license]
-[log]
-[session-management]
-[session-management/defaults]
-[session-management/automatic-console-session]
-[display]
-[connectivity]
-web-port=$dcv_port
-[security]
-EOF
-		cd
-		sudo systemctl enable --now dcvserver
-	else
-		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
-		exit 1
-	fi
-
-	echo "Nice DCV service was installed. Please press enter to continue the installing process or ctrl+c to stop here."
-	read p
+    centosSetupNiceDcvServer
+    finishNiceDcvServerSetup
 }
 
-setupRequiredPackages()
+centosImportKey()
+{
+    sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+}
+
+centosSetupRequiredPackages()
 {
     echo ""
     echo "Updating the system ... sudo yum -y update"
@@ -374,7 +1216,7 @@ setupRequiredPackages()
     fi
 }
 
-setupSessionManagerBroker()
+genericSetupSessionManagerBroker()
 {
 	askThePort "Session Manager Broker"
 	askThePort "Session Manager Agent"
@@ -388,16 +1230,24 @@ setupSessionManagerBroker()
 	then
 		broker_hostname=$broker_hostname_tmp
 	fi
+}
 
+centosSetupSessionManagerBroker()
+{
+    if [[ $nice_dcv_broker_install_answer != "yes" ]]
+    then
+        return 0
+    fi
 
-	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerBrokers/nice-dcv-session-manager-broker-${DCV_SM_BROKER_VERSION}.el8.noarch.rpm
-	wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker-el8.noarch.rpm
-	# https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/SessionManagerBrokers/nice-dcv-session-manager-broker-2023.1.410-1.el8.noarch.rpm
+    genericSetupSessionManagerBroker
+
+    dcv_broker=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+	wget --no-check-certificate $dcv_broker
 	
     if [[ "$?" -eq "0" ]]
     then
-		sudo yum install -y nice-dcv-session-manager-broker-el8.noarch.rpm
+		sudo yum install -y nice-dcv-session-manager-broker-*.noarch.rpm
+        rm -f nice-dcv-session-manager-broker*.rpm
 		if [[ "$?" -ne "0" ]]
     	then
         	echo "Failed to setup the Session Manager Broker. Aborting..."
@@ -485,19 +1335,30 @@ EOF
 	fi
 }
 
-setupSessionManagerGateway()
+genericSetupSessionManagerGateway()
 {
 	askThePort "Session Manager Gateway"
 	askThePort "Session Resolver"
 	askThePort "Web Resources"
+}
 
-	sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-	# wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/Gateway/nice-dcv-connection-gateway-${DCV_SM_GW_VERSION}.el8.x86_64.rpm
-	wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway-el8.x86_64.rpm
+centosSetupSessionManagerGateway()
+{
+    if [[ $nice_dcv_gateway_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
+    genericSetupSessionManagerGateway
+
+	dcv_gateway=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+
+	wget --no-check-certificate $dcv_gateway
 
     if [[ "$?" -eq "0" ]]
     then
-		sudo yum install -y nice-dcv-connection-gateway-el8.x86_64.rpm
+		sudo yum install -y nice-dcv-connection-gateway*.rpm
+        rm -f nice-dcv-connection-gateway*.rpm
 	    if [[ "$?" -ne "0" ]]
  	    then
  	       echo "Failed to setup the DCV Connection Gateway. Aborting..."
@@ -529,13 +1390,21 @@ EOF
 	fi
 }
 
-setupSessionManagerAgent()
+centosSetupSessionManagerAgent()
 {
-    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerAgents/nice-dcv-session-manager-agent-${DCV_SM_AGENT_VERSION}.el8.x86_64.rpm
-    wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm
+    if [[ $nice_dcv_agent_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+
+    dcv_agent=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+    wget --no-check-certificate $dcv_agent
+
     if [[ "$?" -eq "0" ]]
     then
-	sudo yum install -y https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm
+	sudo yum install -y nice-dcv-session-manager-agent*.rpm
+    rm -f nice-dcv-session-manager-agent*.rpm
+
 	if [[ "$?" -ne "0" ]]
     	then
             echo "Failed to setup the Session Manager Agent. Aborting..."
@@ -626,12 +1495,16 @@ registerFirstApiClient()
 setupSessionManagerCli()
 {
     cd
-    # https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/SessionManagerCLI/nice-dcv-session-manager-cli-1.1.0-140.zip
-    # wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/${DCV_VERSION}/SessionManagerCLI/nice-dcv-session-manager-cli-${DCV_SM_CLI_VERSION}.zip
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
     if [[ "$?" -eq "0" ]]
     then
+        echo "Failed to download the Session Manager CLI package. Aborting..."
+        exit 32
+    fi
+    if [[ "$?" -eq "0" ]]
+    then
 		unzip nice-dcv-session-manager-cli.zip
+        rm -f nice-dcv-session-manager-cli.zip
 		cd nice-dcv-session-manager-cli-*/
 		sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
 		dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
@@ -670,11 +1543,8 @@ EOF
 	fi
 }
 
-configureFirewallD()
+setFirewalldRules()
 {
-	sudo yum -y install firewalld
-	sudo iptables-save
-
 	# nice dcv server port
 	if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
 	then
@@ -701,6 +1571,18 @@ configureFirewallD()
 
 	sudo firewall-cmd --reload
 	sudo iptables-save 
+}
+
+centosConfigureFirewall()
+{
+    if [[ $nice_dcv_firewall_install_answer != "yes" ]]
+    then
+        return 0
+    fi
+	sudo yum -y install firewalld
+	sudo iptables-save
+
+    setFirewalldRules
 }
 
 finishTheSetup()
@@ -735,15 +1617,15 @@ announceHowTheScriptWorks()
     echo -e "${GREEN}#####################################################################"
     echo -e          "  Welcome to the NICE DCV Session Manager Installation Script"
     echo -e 
-    echo -e "  The script will install and setup DCV without GPU, DCV Session" 
+    echo -e "  The script can install and setup DCV with and without GPU, DCV Session" 
     echo -e         "  Manager Broker, Agent, Gateway and CLI based on your selection."
     echo 
     echo -e         "  NI SP GmbH / info@ni-sp.com / www.ni-sp.com " 
     echo -e         "#####################################################################${NC}"
     echo
-    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (without GPU support). If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
+    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (with and without GPU support). If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
     echo
-    echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV. We will avoid to use ports already in use in your system."
+    echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV port. We will avoid to use ports already in use in your system. If you have a fresh install and is not an IT person, just continue with all default values."
     echo
     echo "Press enter to continue the setup or ctrl+c to cancel."
     read p
@@ -753,12 +1635,35 @@ announceHowTheScriptWorks()
 RED='\033[0;31m'; GREEN='\033[0;32m'; GREY='\033[0;37m'; BLUE='\034[0;37m'; NC='\033[0m'
 ORANGE='\033[0;33m'; BLUE='\033[0;34m'; WHITE='\033[0;97m'; UNLIN='\033[0;4m'
 service_setup_answer="no"
+setup_force="false"
+ubuntu_distro="false"
+ubuntu_version=""
+ubuntu_major_version=""
+ubuntu_minor_version=""
+centos_version=""
+centos_distro="false"
+redhat_distro="false"
+redhat_version=""
+rockylinux_version=""
+rockylinux_distro="false"
+almalinux_version=""
+almalinux_distro="false"
 nice_dcv_server_install_answer="no"
 nice_dcv_broker_install_answer="no"
 nice_dcv_agent_install_answer="no"
 nice_dcv_gateway_install_answer="no"
 nice_dcv_firewall_install_answer="no"
 nice_dcv_cli_install_answer="no"
+dcv_version=2023.1
+DCV_VERSION=2023.1
+#DCV_SM_BROKER_VERSION=2023.1.410-1
+#DCV_SM_AGENT_VERSION=2023.1.732-1
+#DCV_SM_GW_VERSION=2023.1.710-1
+#DCV_SM_CLI_VERSION=1.1.0-140
+#DCV_SM_BROKER_VERSION=""
+#DCV_SM_AGENT_VERSION=""
+#DCV_SM_GW_VERSION=""
+#DCV_SM_CLI_VERSION=""
 broker_url=""
 broker_ip=""
 broker_hostname="localhost"
@@ -769,7 +1674,9 @@ gateway_resolver_port="9000"
 gateway_web_resources="9001"
 dcv_port="8443"
 port_used=1
-dcv_will_be_installed=0
+dcv_will_be_installed="false"
+dcv_gpu_support="false"
+dcv_gpu_type="none"
 dcv_cli_hostname="localhost"
 dcv_broker_config_file="/etc/dcv-session-manager-broker/session-manager-broker.properties"
 dcv_gateway_config_file="/etc/dcv-connection-gateway/dcv-connection-gateway.conf"
@@ -778,59 +1685,51 @@ dcv_gateway_pass="/etc/dcv-session-manager-broker/gateway-creds/pass"
 dcv_gateway_cert_dir="/etc/dcv-session-manager-broker/gateway-creds/"
 dcv_gateway_key="/etc/dcv-session-manager-broker/gateway-creds/dcv_gateway_key.pem"
 dcv_gateway_cert="/etc/dcv-session-manager-broker/gateway-creds/dcv_gateway_cert.pem"
+url_amd_centos7_driver=""
+url_amd_centos8_driver="https://repo.radeon.com/amdgpu-install/23.40.2/rhel/8.9/amdgpu-install-6.0.60002-1.el8.noarch.rpm"
+url_amd_centos9_driver="https://repo.radeon.com/amdgpu-install/23.40.2/rhel/9.3/amdgpu-install-6.0.60002-1.el9.noarch.rpm"
+url_amd_ubuntu_driver="https://repo.radeon.com/amdgpu-install/23.40.2/ubuntu/focal/amdgpu-install_6.0.60002-1_all.deb"
+url_nvidia_tesla_driver="https://us.download.nvidia.com/XFree86/Linux-x86_64/555.52.04/NVIDIA-Linux-x86_64-555.52.04.run"
 
 main()
 {
-	checkCentosVersion
+	checkLinuxDistro
 	announceHowTheScriptWorks
-	# disableIpv6
-	setupRequiredPackages
+    askAllQuestions
 
-	# dcv server setup
-	askAboutServiceSetup "dcv"
-	if [[ $nice_dcv_server_install_answer == "yes" ]]
-	then
-		dcv_will_be_installed=1
-		setupNiceDcvWithoutGpu
-	fi
-
-	# dcv session manager broker setup
-	askAboutServiceSetup "broker"
-	if [[ $nice_dcv_broker_install_answer == "yes" ]]
-	then
-		setupSessionManagerBroker
-	fi
-
-	# dcv session manager agent setup
-	askAboutServiceSetup "agent"
-	if [[ $nice_dcv_agent_install_answer == "yes" ]]
-	then
-		setupSessionManagerAgent
-	fi
+    if [[ "{$ubuntu_version}x" == "x" ]]
+    then
+        if [[ "{$centos_version}x" == "x" ]]
+        then
+            echo "Is not possible to setup any package. Aborting..."
+            exit 7
+        else
+            centosImportKey
+            centosSetupRequiredPackages
+            installNiceDcvSetup
+		    centosSetupSessionManagerBroker
+            centosSetupSessionManagerAgent
+            centosSetupSessionManagerGateway
+            centosConfigureFirewall
+        fi
+    else
+        ubuntuImportKey
+        ubuntuSetupRequiredPackages
+        installNiceDcvSetup
+        ubuntuSetupSessionManagerBroker
+        ubuntuSetupSessionManagerAgent
+        ubuntuSetupSessionManagerGateway
+        ubuntuConfigureFirewall
+    fi
 
 	# dcv session manager cli setup
-	askAboutServiceSetup "cli"
 	if [[ $nice_dcv_cli_install_answer == "yes" ]]
 	then
 		setupSessionManagerCli
 		registerFirstApiClient
 	fi
 
-	# dcv connection gateway setup
-	askAboutServiceSetup "gateway"
-	if [[ $nice_dcv_gateway_install_answer == "yes" ]]
-	then
-		setupSessionManagerGateway
-	fi
-
-	# firewalld setup and rules
-	askAboutServiceSetup "firewall"
-	if [[ $nice_dcv_firewall_install_answer == "yes" ]]
-	then
-		configureFirewallD
-	fi
-
-	# enableIpv6
+	# finish the setup
 	finishTheSetup
 	exit 0
 }
