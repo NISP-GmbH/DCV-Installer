@@ -2,7 +2,6 @@ main()
 {
 	checkLinuxDistro
 	announceHowTheScriptWorks
-    askAllQuestions
 
     if [[ "{$ubuntu_version}x" == "x" ]]
     then
@@ -13,7 +12,9 @@ main()
         else
             centosImportKey
             centosSetupRequiredPackages
+            askAboutServiceSetup "dcv"
             installNiceDcvSetup
+            askAboutSessionManagerComponents
 		    centosSetupSessionManagerBroker
             centosSetupSessionManagerAgent
             centosSetupSessionManagerGateway
@@ -22,7 +23,9 @@ main()
     else
         ubuntuImportKey
         ubuntuSetupRequiredPackages
+        askAboutServiceSetup "dcv"
         installNiceDcvSetup
+        askAboutSessionManagerComponents
         ubuntuSetupSessionManagerBroker
         ubuntuSetupSessionManagerAgent
         ubuntuSetupSessionManagerGateway

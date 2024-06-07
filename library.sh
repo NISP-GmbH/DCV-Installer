@@ -87,9 +87,8 @@ readTheServiceSetupAnswer()
 	service_setup_answer=$(echo $service_setup_answer | tr '[:upper:]' '[:lower:]')
 }
 
-askAllQuestions()
+askAboutSessionManagerComponents()
 {
-    askAboutServiceSetup "dcv"
     askAboutServiceSetup "broker"
     askAboutServiceSetup "agent"
     askAboutServiceSetup "cli"
