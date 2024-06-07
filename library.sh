@@ -450,7 +450,7 @@ EOF
 ubuntuSetupNvidiaDriver()
 {
     wget --no-check-certificate $url_nvidia_tesla_driver
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
         echo "Failed to download the NVIDIA Driver. Aborting..."
         exit 30
@@ -477,7 +477,7 @@ EOF
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
         wget --no-check-certificate $url_amd_ubuntu_driver
-        if [[ "$?" -eq "0" ]]
+        if [ $? -ne 0 ]
         then
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 31
@@ -500,7 +500,7 @@ EOF
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
         wget --no-check-certificate $url_amd_ubuntu_driver
-        if [[ "$?" -eq "0" ]]
+        if [ $? -ne 0 ]
         then
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 32
@@ -551,7 +551,7 @@ ubuntuSetupNiceDcvServer()
     esac
 
     wget --no-check-certificate $dcv_server
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
         exit 23
@@ -728,7 +728,7 @@ ubuntuSetupSessionManagerBroker()
     esac
 
     wget --no-check-certificate $dcv_broker
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv broker package to setup the service. Aborting..."
         exit 26
@@ -756,7 +756,7 @@ ubuntuSetupSessionManagerAgent()
     esac
 
     wget --no-check-certificate $dcv_agent
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv agent package to setup the service. Aborting..."
         exit 28
@@ -847,7 +847,7 @@ ubuntuSetupSessionManagerGateway()
     esac
 
     wget --no-check-certificate $dcv_gateway
-    if [[ "$?" -eq "0" ]]
+    if [ $? -eq 0 ]
     then
         echo "Failed to download the right dcv gateway package to setup the service. Aborting..."
         exit 28
@@ -917,7 +917,7 @@ EOF
 centosSetupNvidiaDriver()
 {
     wget --no-check-certificate $url_nvidia_tesla_driver
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
         echo "Failed to download the NVIDIA driver. Aborting..."
         exit 29
@@ -985,7 +985,7 @@ centosSetupNiceDcvServer()
         exit 22
     fi
 	wget --no-check-certificate $dcv_server
-	if [[ "$?" -eq "0" ]]
+	if [ $? -ne 0 ]
 	then
 		cd
 		tar zxvf nice-dcv-*el${centos_version}*.tgz
@@ -993,7 +993,7 @@ centosSetupNiceDcvServer()
 		cd nice-dcv-*x86_64
 
 		sudo yum -y install nice-dcv-server-*.el${centos_version}.x86_64.rpm nice-xdcv-*.el${centos_version}.x86_64.rpm nice-dcv-web-viewer*.el${centos_version}.x86_64.rpm nice-dcv-gltest-*.el${centos_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${centos_version}.x86_64.rpm
-		if [[ "$?" -ne "0" ]]
+		if [ $? -ne 0 ]
     	then
         	echo "Failed to setup the DCV Server. Aborting..."
         	exit 10
@@ -1111,7 +1111,7 @@ centosSetupNiceDcvWithoutGpu()
     fi
 	
 	sudo yum -y groupinstall 'Server with GUI'
-	if [[ "$?" -ne "0" ]]
+	if [ $? -ne 0 ]
 	then
 		echo "Failed to setup the Server GUI. Aborting..."
 		exit 8
@@ -1121,7 +1121,7 @@ centosSetupNiceDcvWithoutGpu()
 	sudo systemctl set-default graphical.target
 	sudo systemctl isolate graphical.target
 	sudo yum -y install glx-utils xorg-x11-drv-dummy git
-    if [[ "$?" -ne "0" ]]
+    if [ $? -ne 0 ]
     then
         echo "Failed to setup the basic packages for DCV without GPU. Aborting..."
         exit 9
@@ -1185,14 +1185,14 @@ centosSetupRequiredPackages()
     echo "Updating the system ... sudo yum -y update"
     echo
 	sudo yum -y update
-	if [[ "$?" -ne "0" ]]
+	if [ $? -ne 0 ]
     then
         echo "Failed to execute yum update. Aborting..."
         exit 11
     fi
 
 	sudo yum -y install vim rsync mtr net-tools lsof tar unzip
-	if [[ "$?" -ne "0" ]]
+	if [ $? -ne 0 ]
     then
         echo "Failed to setup the basic packages. Aborting..."
         exit 13
@@ -1227,11 +1227,11 @@ centosSetupSessionManagerBroker()
     dcv_broker=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
 	wget --no-check-certificate $dcv_broker
 	
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
 		sudo yum install -y nice-dcv-session-manager-broker-*.noarch.rpm
         rm -f nice-dcv-session-manager-broker*.rpm
-		if [[ "$?" -ne "0" ]]
+		if [ $? -ne 0 ]
     	then
         	echo "Failed to setup the Session Manager Broker. Aborting..."
         	exit 14
@@ -1338,11 +1338,11 @@ centosSetupSessionManagerGateway()
 
 	wget --no-check-certificate $dcv_gateway
 
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
 		sudo yum install -y nice-dcv-connection-gateway*.rpm
         rm -f nice-dcv-connection-gateway*.rpm
-	    if [[ "$?" -ne "0" ]]
+	    if [ $? -ne 0 ]
  	    then
  	       echo "Failed to setup the DCV Connection Gateway. Aborting..."
 	        exit 15
@@ -1383,12 +1383,12 @@ centosSetupSessionManagerAgent()
     dcv_agent=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
     wget --no-check-certificate $dcv_agent
 
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
 	sudo yum install -y nice-dcv-session-manager-agent*.rpm
     rm -f nice-dcv-session-manager-agent*.rpm
 
-	if [[ "$?" -ne "0" ]]
+	if [ $? -ne 0 ]
     	then
             echo "Failed to setup the Session Manager Agent. Aborting..."
             exit 16
@@ -1479,12 +1479,12 @@ setupSessionManagerCli()
 {
     cd
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
-    if [[ "$?" -eq "0" ]]
+    if [ $? -ne 0 ]
     then
         echo "Failed to download the Session Manager CLI package. Aborting..."
         exit 32
     fi
-    if [[ "$?" -eq "0" ]]
+    if [ $? -eq 0 ]
     then
 		unzip nice-dcv-session-manager-cli.zip
         rm -f nice-dcv-session-manager-cli.zip
