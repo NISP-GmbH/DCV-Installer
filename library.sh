@@ -948,7 +948,7 @@ EOF
 
 createDcvSsl()
 {
-    sudo openssl req -x509 -newkey rsa:4096 -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 365
+    sudo openssl req -x509 -newkey rsa:4096 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 365
     sudo echo 'ca-file="/etc/dcv/cert.pem"  ' >> /etc/dcv/dcv.conf
 }
 
