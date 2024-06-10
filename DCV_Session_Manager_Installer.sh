@@ -596,6 +596,8 @@ ubuntuSetupNiceDcvServer()
     sudo dcvgladmin enable
     sudo systemctl isolate graphical.target
     sudo systemctl enable --now dcvserver
+
+    setFirewalldRules "dcvonly"
 }
 
 ubuntuSetupNiceDcvWithGpuNvidia()
@@ -1053,6 +1055,8 @@ EOF
             fi
         fi
     fi
+    
+    setFirewalldRules "dcvonly"
 }
 
 centosSetupNiceDcvWithGpuNvidia()
@@ -1547,32 +1551,48 @@ EOF
 
 setFirewalldRules()
 {
-	# nice dcv server port
-	if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
-	then
-		sudo firewall-cmd --zone=public --add-port=${dcv_port}/tcp --permanent
-	fi
+    # if just dcv ports, $1 == dcvonly
 
-	# agent to broker port
-	if [ -f /etc/systemd/system/multi-user.target.wants/dcv-session-manager-agent.service ]
-	then
-		sudo firewall-cmd --zone=public --add-port=${agent_to_broker_port}/tcp --permanent
-	fi
+    if [[ "$1" != "dcvonly" ]]
+    then
+    	if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
+    	then
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/tcp --permanent
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/udp --permanent
+    	fi
+    fi
 
-	# client to broker port
-	if [ -f /etc/systemd/system/multi-user.target.wants/dcv-session-manager-broker.service ]
-	then
-		sudo firewall-cmd --zone=public --add-port=${client_to_broker_port}/tcp --permanent
-	fi
+    if [[ "$1" != "dcvonly" ]]
+    then
 
-	# gateway to broker
-	if [ -f $dcv_gateway_config_file ]
-	then
-		sudo firewall-cmd --zone=public --add-port=${gateway_to_broker_port}/tcp --permanent
-	fi
+	    # nice dcv server port
+    	if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
+    	then
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/tcp --permanent
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/udp --permanent
+    	fi
 
-	sudo firewall-cmd --reload
-	sudo iptables-save 
+    	# agent to broker port
+    	if [ -f /etc/systemd/system/multi-user.target.wants/dcv-session-manager-agent.service ]
+    	then
+    		sudo firewall-cmd --zone=public --add-port=${agent_to_broker_port}/tcp --permanent
+    	fi
+
+    	# client to broker port
+    	if [ -f /etc/systemd/system/multi-user.target.wants/dcv-session-manager-broker.service ]
+    	then
+    		sudo firewall-cmd --zone=public --add-port=${client_to_broker_port}/tcp --permanent
+    	fi
+ 
+    	# gateway to broker
+    	if [ -f $dcv_gateway_config_file ]
+    	then
+    		sudo firewall-cmd --zone=public --add-port=${gateway_to_broker_port}/tcp --permanent
+    	fi
+    fi
+
+    sudo firewall-cmd --reload
+    sudo iptables-save 
 }
 
 centosConfigureFirewall()
