@@ -985,7 +985,7 @@ centosSetupNiceDcvServer()
         exit 22
     fi
 	wget --no-check-certificate $dcv_server
-	if [ $? -ne 0 ]
+	if [ $? -eq 0 ]
 	then
 		cd
 		tar zxvf nice-dcv-*el${centos_version}*.tgz
@@ -1383,7 +1383,7 @@ centosSetupSessionManagerAgent()
     dcv_agent=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
     wget --no-check-certificate $dcv_agent
 
-    if [ $? -ne 0 ]
+    if [ $? -eq 0 ]
     then
 	sudo yum install -y nice-dcv-session-manager-agent*.rpm
     rm -f nice-dcv-session-manager-agent*.rpm
