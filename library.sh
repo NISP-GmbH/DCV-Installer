@@ -1386,13 +1386,14 @@ centosSetupSessionManagerAgent()
     if [ $? -eq 0 ]
     then
 	sudo yum install -y nice-dcv-session-manager-agent*.rpm
-    rm -f nice-dcv-session-manager-agent*.rpm
 
 	if [ $? -ne 0 ]
-    	then
-            echo "Failed to setup the Session Manager Agent. Aborting..."
-            exit 16
-    	fi
+    then
+        echo "Failed to setup the Session Manager Agent. Aborting..."
+        exit 16
+    else
+        rm -f nice-dcv-session-manager-agent*.rpm
+    fi
 	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
 	
 	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
