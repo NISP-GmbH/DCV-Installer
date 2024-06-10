@@ -1008,6 +1008,8 @@ centosSetupNiceDcvServer()
 [session-management/automatic-console-session]
 [display]
 [connectivity]
+enable-quic-frontend=true
+enable-datagrams-display = always-off
 web-port=$dcv_port
 [security]
 EOF
