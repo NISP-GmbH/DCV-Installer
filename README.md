@@ -23,7 +23,7 @@ Notes:
 
 ## How to install the DCV Services
 
-The script to execute the Installer foor the different compenents is:
+The script to execute the Installer for the different compenents is:
 
 ```bash
 /bin/bash DCV_Session_Manager_Installer.sh
