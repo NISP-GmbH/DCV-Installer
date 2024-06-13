@@ -28,6 +28,8 @@ The script to execute the Installer for the different compenents is:
 ```bash
 wget -q https://raw.githubusercontent.com/NISP-GmbH/DCV-Session-Manager-Installer/main/DCV_Session_Manager_Installer.sh
 /bin/bash DCV_Session_Manager_Installer.sh
+# or
+bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/NISP-GmbH/DCV-Session-Manager-Installer/main/DCV_Session_Manager_Installer.sh)
 ```
 
 ## How to customize the DCV_Session_Manager_Installer.sh
