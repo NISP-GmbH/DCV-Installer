@@ -1,4 +1,4 @@
-# DCV Session Manager
+# DCV, DCV Session Manager, DCV Connection Gateway
 
 ## Supported Operating Systems
 
@@ -16,7 +16,7 @@ The script to execute the DCV Session Manager is:
 ## Which services can be installed and configured
 
 - DCV Server without GPU support
-- DCV Server with GPU support (NVIDIA or AMD)
+- DCV Server with GPU support (NVIDIA or AMD (on-request))
 - DCV Session Manager Broker
 - DCV Session Manager Agent
 - DCV Session Manager Gateway
