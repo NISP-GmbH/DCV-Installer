@@ -1,4 +1,4 @@
-# Installer for NICE DCV, DCV Session Manager, DCV Connection Gateway
+# Guided Installer for NICE DCV, DCV Session Manager, DCV Connection Gateway
 
 ## Supported Operating Systems
 
