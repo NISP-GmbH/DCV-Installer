@@ -2,7 +2,7 @@
 
 # create the end user script
 
-end_user_script_name="DCV_Session_Manager_Installer.sh"
+end_user_script_name="../DCV_Session_Manager_Installer.sh"
 
 if [ -f $end_user_script_name ]
 then
