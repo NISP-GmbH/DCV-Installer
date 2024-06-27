@@ -1775,9 +1775,9 @@ finishTheSetup()
 announceHowTheScriptWorks()
 {
     echo -e "${GREEN}#####################################################################"
-    echo -e          "  Welcome to the NICE DCV Session Manager Installation Script"
+    echo -e          "  Welcome to the NICE DCV Installer Script"
     echo -e 
-    echo -e "  The script can install and setup DCV with and without GPU, DCV Session" 
+    echo -e "  The script can install and setup DCV with and without GPU and DCV Session Manager components:" 
     echo -e         "  Manager Broker, Agent, Gateway and CLI based on your selection."
     echo 
     echo -e         "  NI SP GmbH / info@ni-sp.com / www.ni-sp.com " 
