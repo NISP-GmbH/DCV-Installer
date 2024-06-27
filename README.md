@@ -26,14 +26,14 @@ Notes:
 The script to execute the Installer for the different compenents is:
 
 ```bash
-wget -q https://raw.githubusercontent.com/NISP-GmbH/DCV-Session-Manager-Installer/main/DCV_Session_Manager_Installer.sh && /bin/bash DCV_Session_Manager_Installer.sh
+wget -q https://raw.githubusercontent.com/NISP-GmbH/DCV-Installer/main/DCV_Installer.sh && /bin/bash DCV_Installer.sh
 ```
 or
 ```bash
-bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/NISP-GmbH/DCV-Session-Manager-Installer/main/DCV_Session_Manager_Installer.sh)
+bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/NISP-GmbH/DCV-Installer/main/DCV_Installer.sh)
 ```
 
-## How to customize the DCV_Session_Manager_Installer.sh
+## How to customize the DCV_Installer.sh
 
 If you need to customize anything, you can edit the following files:
 - head.txt: script head (before any code)
@@ -41,4 +41,4 @@ If you need to customize anything, you can edit the following files:
 - tail.txt: if main.sh does not exit with any exit code, the tail.txt code will be executed
 - library.sh: where all bash functions live
 
-After any customization, you can use create_end_user_script.sh script to create your customized DCV_Session_Manager_Installer.sh installer.
+After any customization, you can use create_end_user_script.sh script to create your customized DCV_Installer.sh installer.
