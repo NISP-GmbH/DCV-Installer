@@ -7,7 +7,7 @@ main()
     then
         if [[ "{$redhat_distro_based_version}x" == "x" ]]
         then
-            echo "Is not possible to setup any package. Aborting..."
+            echo "Is not possible to setup any package because the OS version was not found. Aborting..."
             exit 7
         else
             centosImportKey
