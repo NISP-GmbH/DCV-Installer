@@ -1645,9 +1645,8 @@ registerFirstApiClient()
 
 setupSessionManagerCli()
 {
-    cd
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
-    if [ $? -ne 0 ]
+    if [ $? -eq 0 ]
     then
         echo "Failed to download the Session Manager CLI package. Aborting..."
         exit 32
