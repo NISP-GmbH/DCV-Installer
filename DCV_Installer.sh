@@ -732,10 +732,10 @@ EOF
 
 ubuntuSetupSessionManagerBroker()
 {
-    if [[ $nice_dcv_broker_install_answer != "yes" ]]
+    if [[ $nice_dcv_broker_install_answer != "yes" ]]   
     then
         return 0
-   fi
+    fi
 
     genericSetupSessionManagerBroker
 
@@ -1872,11 +1872,11 @@ main()
 	checkLinuxDistro
 	announceHowTheScriptWorks
 
-    if [[ "{$ubuntu_version}x" == "x" ]]
+    if [[ "${ubuntu_version}x" == "x" ]]
     then
-        if [[ "{$redhat_distro_based_version}x" == "x" ]]
+        if [[ "${redhat_distro_based_version}x" == "x" ]]
         then
-            echo "Is not possible to setup any package. Aborting..."
+            echo "Is not possible to setup any package because the OS version was not found. Aborting..."
             exit 7
         else
             centosImportKey
