@@ -716,10 +716,10 @@ EOF
 
 ubuntuSetupSessionManagerBroker()
 {
-    if [[ $nice_dcv_broker_install_answer != "yes" ]]
+    if [[ $nice_dcv_broker_install_answer != "yes" ]]   
     then
         return 0
-   fi
+    fi
 
     genericSetupSessionManagerBroker
 
