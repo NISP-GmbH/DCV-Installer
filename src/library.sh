@@ -992,6 +992,7 @@ centosSetupNiceDcvServer()
         echo "Failed to get the right dcv server tarball file to dowload and install. Aborting..."
         exit 22
     fi
+
 	wget --no-check-certificate $dcv_server
 	if [ $? -eq 0 ]
 	then
@@ -1393,7 +1394,7 @@ centosSetupSessionManagerBroker()
     dcv_broker=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
 	wget --no-check-certificate $dcv_broker
 	
-    if [ $? -ne 0 ]
+    if [ $? -eq 0 ]
     then
 		sudo yum install -y nice-dcv-session-manager-broker-*.noarch.rpm
         rm -f nice-dcv-session-manager-broker*.rpm
@@ -1504,7 +1505,7 @@ centosSetupSessionManagerGateway()
 
 	wget --no-check-certificate $dcv_gateway
 
-    if [ $? -ne 0 ]
+    if [ $? -eq 0 ]
     then
 		sudo yum install -y nice-dcv-connection-gateway*.rpm
         rm -f nice-dcv-connection-gateway*.rpm
@@ -1551,18 +1552,18 @@ centosSetupSessionManagerAgent()
 
     if [ $? -eq 0 ]
     then
-	sudo yum install -y nice-dcv-session-manager-agent*.rpm
+    	sudo yum install -y nice-dcv-session-manager-agent*.rpm
 
-	if [ $? -ne 0 ]
-    then
-        echo "Failed to setup the Session Manager Agent. Aborting..."
-        exit 16
-    else
-        rm -f nice-dcv-session-manager-agent*.rpm
-    fi
-	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
+    	if [ $? -ne 0 ]
+        then
+            echo "Failed to setup the Session Manager Agent. Aborting..."
+            exit 16
+        else
+            rm -f nice-dcv-session-manager-agent*.rpm
+        fi
+    	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
 	
-	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
+    	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
 [agent]
 
@@ -1650,15 +1651,15 @@ setupSessionManagerCli()
     then
         echo "Failed to download the Session Manager CLI package. Aborting..."
         exit 32
-    fi
-    if [ $? -eq 0 ]
-    then
-		unzip nice-dcv-session-manager-cli.zip
-        rm -f nice-dcv-session-manager-cli.zip
-		cd nice-dcv-session-manager-cli-*/
-		sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
-		dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
-		cat << EOF | sudo tee $dcv_sm_cli_conf_file
+    else
+        if [ $? -eq 0 ]
+        then
+    		unzip nice-dcv-session-manager-cli.zip
+            rm -f nice-dcv-session-manager-cli.zip
+    		cd nice-dcv-session-manager-cli-*/
+    		sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
+    		dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
+    		cat << EOF | sudo tee $dcv_sm_cli_conf_file
 [output]
 # The formatting style for command output.
 # output-format = json
@@ -1687,10 +1688,11 @@ itwillbechangedtoclientpass
 # hostname or IP of the broker. This parameter is mandatory.
 url = https://${dcv_cli_hostname}:${client_to_broker_port}
 EOF
-	else
-		echo "Failed to download the CLI installer. Aborting..."
-		exit 6
-	fi
+    	else
+    		echo "Failed to download the CLI installer. Aborting..."
+    		exit 6
+    	fi
+    fi
 }
 
 setFirewalldRules()
