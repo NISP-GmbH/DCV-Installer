@@ -5,7 +5,7 @@ main()
 
     if [[ "{$ubuntu_version}x" == "x" ]]
     then
-        if [[ "{$centos_version}x" == "x" ]]
+        if [[ "{$redhat_distro_based_version}x" == "x" ]]
         then
             echo "Is not possible to setup any package. Aborting..."
             exit 7

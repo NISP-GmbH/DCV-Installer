@@ -18,33 +18,39 @@
 checkLinuxDistro()
 {
     echo "If you know what you are doing, please use --force option to avoid our Linux Distro compatibility test."
-    if [ -f /etc/centos-release ]
+
+    if [ -f /etc/redhat-release ]
     then
-        centos_distro="true"
-        if cat /etc/centos-release | egrep -iq "(7|8|9)"
+        release_info=$(cat /etc/redhat-release)
+
+        if echo $release_info | egrep -iq centos
         then
-            if cat /etc/centos-release | egrep -iq "7"
+            redhat_distro_based="true"
+        else
+            if echo $release_info | egrep -iq almalinux
             then
-                centos_version=7
+                redhat_distro_based="true"
             else
-                if cat /etc/centos-release | egrep -iq "8"
+                if echo $release_info | egrep -iq rocky
                 then
-                    centos_version=8
-                else
-                    if cat /etc/centos-release | egrep -iq "9"
-                    then
-                        centos_version=9
-                    else
-                        echo "Your RedHat Based Linux distro version..."
-                        cat /etc/centos-release
-                        echo "is not supported. Aborting..."
-                        exit 18
-                    fi
+                    redhat_distro_based="true"
                 fi
+            fi
+        fi
+
+        if [[ "${redhat_distro_based}" == "true" ]]
+        then
+            redhat_distro_based_version=$(echo "$release_info" | grep -oE '[0-9]+\.[0-9]+' | cut -d. -f1)
+            if [[ ! $redhat_distro_based_version =~ ^[789]$ ]]
+            then
+                echo "Your RedHat Based Linux distro version..."
+                cat /etc/redhat-release
+                echo "is not supported. Aborting..."
+                exit 18
             fi
         else
             echo "Your RedHat Based Linux distro..."
-            cat /etc/centos-release
+            cat /etc/redhat-release
             echo "is not supported. Aborting..."
             exit 19
         fi
@@ -206,7 +212,7 @@ installNiceDcvSetup()
             # if dcv server driver support will be nvidia
             if [[ "$dcv_gpu_type" == "nvidia" ]]
             then
-                if [[ "$centos_distro" == "true" ]]
+                if [[ "$redhat_distro_based" == "true" ]]
                 then
                     centosSetupNiceDcvWithGpuNvidia
                 else
@@ -220,7 +226,7 @@ installNiceDcvSetup()
                 # if dcv server driver support will be amd
                 if [[ "$dcv_gpu_type" == "amd" ]]
                 then
-                    if [[ "$centos_distro" == "true" ]]
+                    if [[ "$redhat_distro_based" == "true" ]]
                     then
                         centosSetupNiceDcvWithGpuAmd
                     else
@@ -233,7 +239,7 @@ installNiceDcvSetup()
             fi           
         # if dcv server will not have gpu support
         else
-            if [[ "$centos_distro" == "true" ]]
+            if [[ "$redhat_distro_based" == "true" ]]
             then
                 centosSetupNiceDcvWithoutGpu
             else
@@ -995,7 +1001,7 @@ centos9SpecificSettings()
 
 centosSetupNiceDcvServer()
 {
-	dcv_server=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
+	dcv_server=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
 
     if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
     then
@@ -1006,11 +1012,11 @@ centosSetupNiceDcvServer()
 	if [ $? -eq 0 ]
 	then
 		cd
-		tar zxvf nice-dcv-*el${centos_version}*.tgz
-		rm -f nice-dcv-*el${centos_version}*.tgz
+		tar zxvf nice-dcv-*el${redhat_distro_based_version}*.tgz
+		rm -f nice-dcv-*el${redhat_distro_based_version}*.tgz
 		cd nice-dcv-*x86_64
 
-		sudo yum -y install nice-dcv-server-*.el${centos_version}.x86_64.rpm nice-xdcv-*.el${centos_version}.x86_64.rpm nice-dcv-web-viewer*.el${centos_version}.x86_64.rpm nice-dcv-gltest-*.el${centos_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${centos_version}.x86_64.rpm
+		sudo yum -y install nice-dcv-server-*.el${redhat_distro_based_version}.x86_64.rpm nice-xdcv-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-web-viewer*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-gltest-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${redhat_distro_based_version}.x86_64.rpm
 		if [ $? -ne 0 ]
     	then
         	echo "Failed to setup the DCV Server. Aborting..."
@@ -1195,15 +1201,15 @@ EOF
 
     rm -rf nice-dcv-*x86_64
 
-    if [[ "$centos_version" == "7" ]]
+    if [[ "$redhat_distro_based_version" == "7" ]]
     then
         centos7SpecificSettings
     else
-        if [[ "$centos_version" == "8" ]]
+        if [[ "$redhat_distro_based_version" == "8" ]]
         then
             centos8SpecificSettings
         else
-            if [[ "$centos_version" == "9" ]]
+            if [[ "$redhat_distro_based_version" == "9" ]]
             then
                 centos9SpecificSettings
             fi
@@ -1227,7 +1233,7 @@ centosSetupNiceDcvWithGpuNvidia()
             then
                 return 0
             else
-                if [[ $centos_distro == "false" ]]
+                if [[ $redhat_distro_based == "false" ]]
                 then
                     return 0
                 fi
@@ -1255,7 +1261,7 @@ centosSetupNiceDcvWithGpuAmd()
             then
                 return 0
             else
-                if [[ $centos_distro == "false" ]]
+                if [[ $redhat_distro_based == "false" ]]
                 then
                     return 0
                 fi
@@ -1279,7 +1285,7 @@ centosSetupNiceDcvWithoutGpu()
         then
             return 0
         else
-            if [[ $centos_distro == "false" ]]
+            if [[ $redhat_distro_based == "false" ]]
             then
                 return 0
             fi
@@ -1400,7 +1406,7 @@ centosSetupSessionManagerBroker()
 
     genericSetupSessionManagerBroker
 
-    dcv_broker=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+    dcv_broker=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
 	wget --no-check-certificate $dcv_broker
 	
     if [ $? -ne 0 ]
@@ -1510,7 +1516,7 @@ centosSetupSessionManagerGateway()
 
     genericSetupSessionManagerGateway
 
-	dcv_gateway=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+	dcv_gateway=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
 
 	wget --no-check-certificate $dcv_gateway
 
@@ -1556,7 +1562,7 @@ centosSetupSessionManagerAgent()
         return 0
     fi
 
-    dcv_agent=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${centos_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+    dcv_agent=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
     wget --no-check-certificate $dcv_agent
 
     if [ $? -eq 0 ]
@@ -1791,9 +1797,9 @@ finishTheSetup()
 announceHowTheScriptWorks()
 {
     echo -e "${GREEN}#####################################################################"
-    echo -e          "  Welcome to the NICE DCV Session Manager Installation Script"
+    echo -e          "  Welcome to the NICE DCV Installer Script"
     echo -e 
-    echo -e "  The script can install and setup DCV with and without GPU, DCV Session" 
+    echo -e "  The script can install and setup DCV with and without GPU and DCV Session Manager components:" 
     echo -e         "  Manager Broker, Agent, Gateway and CLI based on your selection."
     echo 
     echo -e         "  NI SP GmbH / info@ni-sp.com / www.ni-sp.com " 
@@ -1816,14 +1822,8 @@ ubuntu_distro="false"
 ubuntu_version=""
 ubuntu_major_version=""
 ubuntu_minor_version=""
-centos_version=""
-centos_distro="false"
-redhat_distro="false"
-redhat_version=""
-rockylinux_version=""
-rockylinux_distro="false"
-almalinux_version=""
-almalinux_distro="false"
+redhat_distro_based="false"
+redhat_distro_based_version=""
 nice_dcv_server_install_answer="no"
 nice_dcv_broker_install_answer="no"
 nice_dcv_agent_install_answer="no"
@@ -1874,7 +1874,7 @@ main()
 
     if [[ "{$ubuntu_version}x" == "x" ]]
     then
-        if [[ "{$centos_version}x" == "x" ]]
+        if [[ "{$redhat_distro_based_version}x" == "x" ]]
         then
             echo "Is not possible to setup any package. Aborting..."
             exit 7
