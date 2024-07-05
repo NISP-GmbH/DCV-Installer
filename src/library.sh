@@ -24,7 +24,13 @@ checkLinuxDistro()
 
         if [[ "${redhat_distro_based}" == "true" ]]
         then
-            redhat_distro_based_version=$(echo "$release_info" | grep -oE '[0-9]+\.[0-9]+' | cut -d. -f1)
+            if echo "$release_info" | egrep -iq stream
+            then
+                redhat_distro_based_version=$(cat /etc/redhat-release  |  grep -oE '[0-9]+')
+            else
+                redhat_distro_based_version=$(echo "$release_info" | grep -oE '[0-9]+\.[0-9]+' | cut -d. -f1)
+            fi
+
             if [[ ! $redhat_distro_based_version =~ ^[789]$ ]]
             then
                 echo "Your RedHat Based Linux distro version..."
