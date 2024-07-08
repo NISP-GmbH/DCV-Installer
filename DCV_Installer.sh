@@ -1031,21 +1031,8 @@ centosSetupNiceDcvServer()
     	fi
 		sudo systemctl isolate multi-user.target
 		sudo systemctl isolate graphical.target
-		cat << EOF | sudo tee /etc/dcv/dcv.conf
-[license]
-[log]
-[session-management]
-[session-management/defaults]
-[session-management/automatic-console-session]
-[display]
-[connectivity]
-enable-quic-frontend=true
-enable-datagrams-display = always-off
-web-port=$dcv_port
-[security]
-EOF
 
-    cat <<EOF | sudo tee /etc/dcv/dcv.conf.original
+    cat <<EOF | sudo tee /etc/dcv/dcv.conf
 ###############################################################################
 ## Section "license" contains properties to configure the the license management
 ###############################################################################
@@ -1146,6 +1133,10 @@ target-fps = 30
 ###############################################################################
 
 [connectivity]
+
+enable-quic-frontend=true
+enable-datagrams-display = always-off
+web-port=$dcv_port
 
 # Property "web-port" specifies on which TCP port the DCV server listens on
 # It must be a number between 1024 and 65535 representing an
