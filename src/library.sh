@@ -1002,7 +1002,6 @@ centosSetupNiceDcvServer()
 	wget --no-check-certificate $dcv_server
 	if [ $? -eq 0 ]
 	then
-		cd
 		tar zxvf nice-dcv-*el${redhat_distro_based_version}*.tgz
 		rm -f nice-dcv-*el${redhat_distro_based_version}*.tgz
 		cd nice-dcv-*x86_64
