@@ -877,11 +877,12 @@ ubuntuSetupSessionManagerGateway()
     esac
 
     wget --no-check-certificate $dcv_gateway
-    if [ $? -eq 0 ]
+    if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv gateway package to setup the service. Aborting..."
         exit 28
     fi
+
     sudo apt install -y ./nice-dcv-connection-gateway*.deb
     rm -f ./nice-dcv-connection-gateway*.deb
 
