@@ -420,30 +420,17 @@ ubuntuSetupRequiredPackages()
             ;;
     esac
 
-    if [ -f /etc/gdm3/custom.conf ]
+    if [ -f "$gdm3_file" ]
     then
-
-        gdm3_file="/etc/gdm3/custom.conf"
-        if [ -f $gdm3_file ]
+        cp -a $gdm3_file ${gdm3_file}.backup_$(date +%Y%m%d)
+        if grep -q "^WaylandEnable" "$gdm3_file"
         then
-            target_line="WaylandEnable=false"
-
-            sudo cp "$gdm3_file" "${gdm3_file}.bak"
-
-            sudo awk -v target="$TARGET_LINE" '
-    BEGIN { in_daemon = 0; inserted = 0 }
-    /^\[daemon\]/ { in_daemon = 1 }
-    in_daemon && /^$/ { in_daemon = 0 }
-    in_daemon && /WaylandEnable/ { $0 = target; inserted = 1 }
-    { print }
-    END {
-        if (in_daemon && !inserted) {
-            print target
-        }
-    }
-' "$gdm3_file" > "$gdm3_file.tmp"
+            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm3_file"
+        else
+            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm3_file"
         fi
-        sudo mv "${gdm3_file}.tmp" "$gdm3_file"
+    else
+        echo "The file $gdm3_file does not exist."
     fi
 
     sudo systemctl restart gdm3
@@ -1816,6 +1803,7 @@ ubuntu_major_version=""
 ubuntu_minor_version=""
 redhat_distro_based="false"
 redhat_distro_based_version=""
+gdm3_file="/etc/gdm3/custom.conf"
 nice_dcv_server_install_answer="no"
 nice_dcv_broker_install_answer="no"
 nice_dcv_agent_install_answer="no"
