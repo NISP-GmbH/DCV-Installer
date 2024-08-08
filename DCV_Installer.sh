@@ -1849,6 +1849,10 @@ url_nvidia_tesla_driver="https://us.download.nvidia.com/XFree86/Linux-x86_64/555
 
 main()
 {
+    temp_dir=$(mktemp -d -t dcv_installer_XXXXXXXXXX)
+    original_dir=$(pwd)
+    cd "$temp_dir"
+
 	checkLinuxDistro
 	announceHowTheScriptWorks
 
@@ -1890,6 +1894,8 @@ main()
 
 	# finish the setup
 	finishTheSetup
+
+    cd "$original_dir"
 	exit 0
 }
 
