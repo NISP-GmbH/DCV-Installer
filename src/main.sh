@@ -1,5 +1,9 @@
 main()
 {
+    temp_dir=$(mktemp -d -t dcv_installer_XXXXXXXXXX)
+    original_dir=$(pwd)
+    cd "$temp_dir"
+
 	checkLinuxDistro
 	announceHowTheScriptWorks
 
@@ -41,6 +45,8 @@ main()
 
 	# finish the setup
 	finishTheSetup
+
+    cd "$original_dir"
 	exit 0
 }
 
