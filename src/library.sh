@@ -948,6 +948,16 @@ ResultActive=yes
 EOF
 }
 
+createDcvGatewaySsl()
+{
+    sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $dcv_gateway_key -out $dcv_gateway_cert -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost"
+    sudo chmod 600 $dcv_gateway_cert
+    sudo chmod 600 $dcv_gateway_key
+    sudo chown dcv:dcv $dcv_gateway_cert
+    sudo chown dcv:dcv $dcv_gateway_key
+}
+
+
 createDcvSsl()
 {
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost"
@@ -1503,8 +1513,8 @@ centosSetupSessionManagerGateway()
 [gateway]
 web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
 quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
-cert-file = "$dcv_gateway_key"
-cert-key-file = "$dcv_gateway_cert"
+cert-file = "$dcv_gateway_cert"
+cert-key-file = "$dcv_gateway_key"
 
 [resolver]
 url = "https://localhost:${gateway_resolver_port}"
@@ -1517,7 +1527,35 @@ EOF
 	    sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
 		sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
 
-		sudo systemctl restart dcv-session-manager-broker
+        createDcvGatewaySsl
+
+        if ! id -u dcv > /dev/null 2>&1
+        then 
+            useradd -r -g dcv -s /sbin/nologin dcv
+        fi
+
+        if ! getent group dcv > /dev/null 2>&1
+        then
+            groupadd dcv
+        fi
+
+        cat << EOF | sudo tee $dcv_gateway_systemd_unit
+[Unit]
+Description=DCV Connection Gateway Service
+After=network.target
+
+[Service]
+ExecStart=/usr/libexec/dcv-connection-gateway/dcv-connection-gateway --config /etc/dcv-connection-gateway/dcv-connection-gateway.conf
+User=dcv
+Group=dcv
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+		sudo systemctl enable --now dcv-connection-gateway
+		sudo systemctl restart dcv-connection-gateway
 	else
 		echo "Failed to download the Gateway installer. Aborting..."
 		exit 7
