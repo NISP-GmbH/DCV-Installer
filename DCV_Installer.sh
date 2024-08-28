@@ -964,6 +964,16 @@ ResultActive=yes
 EOF
 }
 
+createDcvGatewaySsl()
+{
+    sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $dcv_gateway_key -out $dcv_gateway_cert -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost"
+    sudo chmod 600 $dcv_gateway_cert
+    sudo chmod 600 $dcv_gateway_key
+    sudo chown dcv:dcv $dcv_gateway_cert
+    sudo chown dcv:dcv $dcv_gateway_key
+}
+
+
 createDcvSsl()
 {
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost"
@@ -1519,8 +1529,8 @@ centosSetupSessionManagerGateway()
 [gateway]
 web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
 quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
-cert-file = "$dcv_gateway_key"
-cert-key-file = "$dcv_gateway_cert"
+cert-file = "$dcv_gateway_cert"
+cert-key-file = "$dcv_gateway_key"
 
 [resolver]
 url = "https://localhost:${gateway_resolver_port}"
@@ -1533,7 +1543,35 @@ EOF
 	    sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
 		sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
 
-		sudo systemctl restart dcv-session-manager-broker
+        createDcvGatewaySsl
+
+        if ! id -u dcv > /dev/null 2>&1
+        then 
+            useradd -r -g dcv -s /sbin/nologin dcv
+        fi
+
+        if ! getent group dcv > /dev/null 2>&1
+        then
+            groupadd dcv
+        fi
+
+        cat << EOF | sudo tee $dcv_gateway_systemd_unit
+[Unit]
+Description=DCV Connection Gateway Service
+After=network.target
+
+[Service]
+ExecStart=/usr/libexec/dcv-connection-gateway/dcv-connection-gateway --config /etc/dcv-connection-gateway/dcv-connection-gateway.conf
+User=dcv
+Group=dcv
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+		sudo systemctl enable --now dcv-connection-gateway
+		sudo systemctl restart dcv-connection-gateway
 	else
 		echo "Failed to download the Gateway installer. Aborting..."
 		exit 7
@@ -1838,9 +1876,10 @@ dcv_broker_config_file="/etc/dcv-session-manager-broker/session-manager-broker.p
 dcv_gateway_config_file="/etc/dcv-connection-gateway/dcv-connection-gateway.conf"
 dcv_gateway_cert_gen="/usr/share/dcv-session-manager-broker/bin/gen-gateway-certificates.sh"
 dcv_gateway_pass="/etc/dcv-session-manager-broker/gateway-creds/pass"
-dcv_gateway_cert_dir="/etc/dcv-session-manager-broker/gateway-creds/"
-dcv_gateway_key="/etc/dcv-session-manager-broker/gateway-creds/dcv_gateway_key.pem"
-dcv_gateway_cert="/etc/dcv-session-manager-broker/gateway-creds/dcv_gateway_cert.pem"
+dcv_gateway_cert_dir="/etc/dcv-connection-gateway/"
+dcv_gateway_key="/etc/dcv-connection-gateway/dcv_gateway_key.pem"
+dcv_gateway_cert="/etc/dcv-connection-gateway/dcv_gateway_cert.pem"
+dcv_gateway_systemd_unit="/etc/systemd/system/dcv-connection-gateway.service"
 url_amd_centos7_driver=""
 url_amd_centos8_driver="https://repo.radeon.com/amdgpu-install/23.40.2/rhel/8.9/amdgpu-install-6.0.60002-1.el8.noarch.rpm"
 url_amd_centos9_driver="https://repo.radeon.com/amdgpu-install/23.40.2/rhel/9.3/amdgpu-install-6.0.60002-1.el9.noarch.rpm"
