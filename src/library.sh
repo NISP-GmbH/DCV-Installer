@@ -1539,21 +1539,6 @@ EOF
             groupadd dcv
         fi
 
-        cat << EOF | sudo tee $dcv_gateway_systemd_unit
-[Unit]
-Description=DCV Connection Gateway Service
-After=network.target
-
-[Service]
-ExecStart=/usr/libexec/dcv-connection-gateway/dcv-connection-gateway --config /etc/dcv-connection-gateway/dcv-connection-gateway.conf
-User=dcv
-Group=dcv
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
 		sudo systemctl enable --now dcv-connection-gateway
 		sudo systemctl restart dcv-connection-gateway
 	else
