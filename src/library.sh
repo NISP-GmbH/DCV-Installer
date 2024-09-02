@@ -956,8 +956,8 @@ createDcvGatewaySsl()
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $dcv_gateway_key -out $dcv_gateway_cert -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost"
     sudo chmod 600 $dcv_gateway_cert
     sudo chmod 600 $dcv_gateway_key
-    sudo chown dcv:dcv $dcv_gateway_cert
-    sudo chown dcv:dcv $dcv_gateway_key
+    sudo chown dcvgw:dcvgw $dcv_gateway_cert
+    sudo chown dcvgw:dcvgw $dcv_gateway_key
 }
 
 
@@ -1532,14 +1532,14 @@ EOF
 
         createDcvGatewaySsl
 
-        if ! id -u dcv > /dev/null 2>&1
+        if ! id -u dcvgw > /dev/null 2>&1
         then 
-            useradd -r -g dcv -s /sbin/nologin dcv
+            useradd -r -g dcvgw -s /sbin/nologin dcv
         fi
 
-        if ! getent group dcv > /dev/null 2>&1
+        if ! getent group dcvgw > /dev/null 2>&1
         then
-            groupadd dcv
+            groupadd dcvgw
         fi
 
 		sudo systemctl enable --now dcv-connection-gateway
