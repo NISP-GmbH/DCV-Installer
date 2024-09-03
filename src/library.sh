@@ -874,15 +874,17 @@ url = "https://localhost:${gateway_resolver_port}"
 url = "https://localhost:${gateway_web_resources}"
 EOF
 
+        createDcvGatewaySsl
+
         if [ -f $dcv_broker_config_file ]
         then
             sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
-            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
+            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem $dcv_gateway_cert
+            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.key $dcv_gateway_key
         fi
 
-        createDcvGatewaySsl
 
         if ! id -u $dcv_gateway_user > /dev/null 2>&1
         then
@@ -1544,15 +1546,16 @@ url = "https://localhost:${gateway_resolver_port}"
 url = "https://localhost:${gateway_web_resources}"
 EOF
 
+        createDcvGatewaySsl
+
         if [ -f $dcv_broker_config_file ]
         then
     		sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
-    		sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
+            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem $dcv_gateway_cert
+            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.key $dcv_gateway_key
         fi
-
-        createDcvGatewaySsl
 
         if ! id -u $dcv_gateway_user > /dev/null 2>&1
         then 
