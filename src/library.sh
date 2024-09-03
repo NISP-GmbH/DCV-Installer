@@ -1525,10 +1525,14 @@ url = "https://localhost:${gateway_resolver_port}"
 [web-resources]
 url = "https://localhost:${gateway_web_resources}"
 EOF
-		sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
-	    sudo sed -i "s/^#gatewayhttpsport.*/gateway-to-broker-connector-https-port = $gateway_to_broker_port/" $dcv_broker_config_file
-	    sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
-		sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
+
+        if [ -f $dcv_broker_config_file ]
+        then
+    		sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
+    	    sudo sed -i "s/^#gatewayhttpsport.*/gateway-to-broker-connector-https-port = $gateway_to_broker_port/" $dcv_broker_config_file
+    	    sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
+    		sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
+        fi
 
         createDcvGatewaySsl
 
