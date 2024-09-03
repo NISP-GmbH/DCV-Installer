@@ -768,7 +768,7 @@ ubuntuSetupSessionManagerAgent()
     sudo apt install -y ./nice-dcv-session-manager-agent*.deb
     rm -f ./nice-dcv-session-manager-agent*.deb
 
-	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
+	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
 	
 	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
@@ -823,7 +823,7 @@ directory = '/var/log/dcv-session-manager-agent/'
 # tls_strict = false
 EOF
 
-	sudo cp /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
 	sudo systemctl restart dcv-session-manager-broker
 	sudo systemctl enable --now dcv-session-manager-agent
 }
@@ -881,7 +881,7 @@ EOF
             sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
-            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem $dcv_gateway_cert
+            sudo cp -f $broker_ssl_cert $dcv_gateway_cert
             sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.key $dcv_gateway_key
             sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_cert
             sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_key
@@ -1555,8 +1555,8 @@ EOF
     		sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
-            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem $dcv_gateway_cert
-            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.key $dcv_gateway_key
+            sudo cp -f $broker_ssl_cert $dcv_gateway_cert
+            sudo cp -f $broker_ssl_key $dcv_gateway_key
             sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_cert
             sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_key
         fi
@@ -1600,7 +1600,7 @@ centosSetupSessionManagerAgent()
         else
             rm -f nice-dcv-session-manager-agent*.rpm
         fi
-    	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
+    	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
 	
     	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
@@ -1655,7 +1655,7 @@ directory = '/var/log/dcv-session-manager-agent/'
 # tls_strict = false
 EOF
 
-		sudo cp /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+		sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
 		sudo systemctl restart dcv-session-manager-broker
 		sudo systemctl enable --now dcv-session-manager-agent
 	else
