@@ -877,8 +877,8 @@ ubuntuSetupSessionManagerGateway()
 [gateway]
 web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
 quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
-cert-file = "$dcv_gateway_key"
-cert-key-file = "$dcv_gateway_cert"
+cert-file = "$dcv_gateway_cert"
+cert-key-file = "$dcv_gateway_key"
 
 [resolver]
 url = "https://localhost:${gateway_resolver_port}"
@@ -897,14 +897,14 @@ EOF
 
         createDcvGatewaySsl
 
-        if ! id -u dcvgw > /dev/null 2>&1
+        if ! id -u $dcv_gateway_user > /dev/null 2>&1
         then
-            useradd -r -g dcvgw -s /sbin/nologin dcv
+            useradd -r -g $dcv_gateway_user -s /sbin/nologin dcv
         fi
 
-        if ! getent group dcvgw > /dev/null 2>&1
+        if ! getent group $dcv_gateway_group > /dev/null 2>&1
         then
-            groupadd dcvgw
+            groupadd $dcv_gateway_group
         fi
 
         sudo systemctl enable --now dcv-connection-gateway
@@ -987,8 +987,8 @@ createDcvGatewaySsl()
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $dcv_gateway_key -out $dcv_gateway_cert -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost"
     sudo chmod 600 $dcv_gateway_cert
     sudo chmod 600 $dcv_gateway_key
-    sudo chown dcvcgw:dcvcgw $dcv_gateway_cert
-    sudo chown dcvcgw:dcvcgw $dcv_gateway_key
+    sudo chown ${dcv_gateway_user}:${dcv_gateway_group} $dcv_gateway_cert
+    sudo chown ${dcv_gateway_user}:${dcv_gateway_group} $dcv_gateway_key
 }
 
 
@@ -1567,14 +1567,14 @@ EOF
 
         createDcvGatewaySsl
 
-        if ! id -u dcvgw > /dev/null 2>&1
+        if ! id -u $dcv_gateway_user > /dev/null 2>&1
         then 
-            useradd -r -g dcvgw -s /sbin/nologin dcv
+            useradd -r -g $dcv_gateway_user -s /sbin/nologin dcv
         fi
 
-        if ! getent group dcvgw > /dev/null 2>&1
+        if ! getent group $dcv_gateway_group > /dev/null 2>&1
         then
-            groupadd dcvgw
+            groupadd $dcv_gateway_group
         fi
 
 		sudo systemctl enable --now dcv-connection-gateway
@@ -1887,6 +1887,8 @@ dcv_gateway_cert_dir="/etc/dcv-connection-gateway/"
 dcv_gateway_key="/etc/dcv-connection-gateway/dcv_gateway_key.pem"
 dcv_gateway_cert="/etc/dcv-connection-gateway/dcv_gateway_cert.pem"
 dcv_gateway_systemd_unit="/etc/systemd/system/dcv-connection-gateway.service"
+dcv_gateway_user="dcvcgw"
+dcv_gateway_group="dcvcgw"
 url_amd_centos7_driver=""
 url_amd_centos8_driver="https://repo.radeon.com/amdgpu-install/23.40.2/rhel/8.9/amdgpu-install-6.0.60002-1.el8.noarch.rpm"
 url_amd_centos9_driver="https://repo.radeon.com/amdgpu-install/23.40.2/rhel/9.3/amdgpu-install-6.0.60002-1.el9.noarch.rpm"
