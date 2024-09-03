@@ -987,8 +987,8 @@ createDcvGatewaySsl()
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $dcv_gateway_key -out $dcv_gateway_cert -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost"
     sudo chmod 600 $dcv_gateway_cert
     sudo chmod 600 $dcv_gateway_key
-    sudo chown dcvgw:dcvgw $dcv_gateway_cert
-    sudo chown dcvgw:dcvgw $dcv_gateway_key
+    sudo chown dcvcgw:dcvcgw $dcv_gateway_cert
+    sudo chown dcvcgw:dcvcgw $dcv_gateway_key
 }
 
 
