@@ -1680,6 +1680,9 @@ registerFirstApiClient()
 
 setupSessionManagerCli()
 {
+    current_dir=$(pwd)
+    mkdir -p $dcv_cli_path
+    cd $dcv_cli_path
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
     if [ $? -eq 0 ]
     then
@@ -1721,6 +1724,7 @@ EOF
         echo "Failed to download the CLI installer. Aborting..."
     	exit 6
     fi
+    cd "$current_dir"
 }
 
 setFirewalldRules()
