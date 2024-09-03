@@ -883,6 +883,8 @@ EOF
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
             sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem $dcv_gateway_cert
             sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.key $dcv_gateway_key
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_cert
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_key
         fi
 
 
@@ -1555,6 +1557,8 @@ EOF
             sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
             sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem $dcv_gateway_cert
             sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.key $dcv_gateway_key
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_cert
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_key
         fi
 
         if ! id -u $dcv_gateway_user > /dev/null 2>&1
