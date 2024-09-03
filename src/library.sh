@@ -736,6 +736,9 @@ ubuntuSetupSessionManagerBroker()
     fi
     sudo apt install -y ./nice-dcv-session-manager-broker*ubuntu*.deb
     rm -f nice-dcv-session-manager-broker*ubuntu*.deb
+
+    sudo systemctl enable --now dcv-session-manager-broker
+    sudo systemctl restart dcv-session-manager-broker
 }
 
 ubuntuSetupSessionManagerAgent()
@@ -859,8 +862,8 @@ ubuntuSetupSessionManagerGateway()
 
     cat << EOF | sudo tee $dcv_gateway_config_file
 [gateway]
-web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
-quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
+web-listen-endpoints = ["0.0.0.0:$gateway_web_port"]
+quic-listen-endpoints = ["0.0.0.0:$gateway_quic_port"]
 cert-file = "$dcv_gateway_cert"
 cert-key-file = "$dcv_gateway_key"
 
@@ -874,8 +877,8 @@ EOF
         if [ -f $dcv_broker_config_file ]
         then
             sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
-            sudo sed -i "s/^#gatewayhttpsport.*/gateway-to-broker-connector-https-port = $gateway_to_broker_port/" $dcv_broker_config_file
-            sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
             sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
         fi
 
@@ -1529,8 +1532,8 @@ centosSetupSessionManagerGateway()
 
         cat << EOF | sudo tee $dcv_gateway_config_file
 [gateway]
-web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
-quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
+web-listen-endpoints = ["0.0.0.0:$gateway_web_port"]
+quic-listen-endpoints = ["0.0.0.0:$gateway_quic_port"]
 cert-file = "$dcv_gateway_cert"
 cert-key-file = "$dcv_gateway_key"
 
@@ -1544,8 +1547,8 @@ EOF
         if [ -f $dcv_broker_config_file ]
         then
     		sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
-    	    sudo sed -i "s/^#gatewayhttpsport.*/gateway-to-broker-connector-https-port = $gateway_to_broker_port/" $dcv_broker_config_file
-    	    sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
     		sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
         fi
 
