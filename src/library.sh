@@ -154,13 +154,13 @@ askAboutServiceSetup()
 askAboutNiceDcvSetup()
 {
     echo 
-    echo -e "Do you want to install ${GREEN}Nice DCV (with or without gpu support)${NC}?"
+    echo -e "Do you want to install ${GREEN}Nice DCV Server${NC}?"
 	readTheServiceSetupAnswer
     if echo $service_setup_answer | egrep -iq "yes"
     then
         dcv_will_be_installed="true"
 	    askThePort "Nice DCV"
-        echo -e "Do you want to install ${GREEN}Nice DCV with GPU Support?${NC}?"
+        echo -e "Do you want to install ${GREEN}Nice DCV SERVER with GPU Support?${NC}?"
 	    readTheServiceSetupAnswer
         if echo $service_setup_answer | egrep -iq "yes"
         then
@@ -1827,7 +1827,7 @@ announceHowTheScriptWorks()
     echo -e         "  NI SP GmbH / info@ni-sp.com / www.ni-sp.com " 
     echo -e         "#####################################################################${NC}"
     echo
-    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (with and without GPU support). If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
+    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (with and without GPU support). The GPU support does not affect DCV Session Manager components. If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
     echo
     echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV port. We will avoid to use ports already in use in your system. If you have a fresh install and is not an IT person, just continue with all default values."
     echo
