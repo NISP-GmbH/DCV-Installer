@@ -170,13 +170,13 @@ askAboutServiceSetup()
 askAboutNiceDcvSetup()
 {
     echo 
-    echo -e "Do you want to install ${GREEN}Nice DCV (with or without gpu support)${NC}?"
+    echo -e "Do you want to install ${GREEN}Nice DCV Server${NC}?"
 	readTheServiceSetupAnswer
     if echo $service_setup_answer | egrep -iq "yes"
     then
         dcv_will_be_installed="true"
 	    askThePort "Nice DCV"
-        echo -e "Do you want to install ${GREEN}Nice DCV with GPU Support?${NC}?"
+        echo -e "Do you want to install ${GREEN}Nice DCV SERVER with GPU Support?${NC}?"
 	    readTheServiceSetupAnswer
         if echo $service_setup_answer | egrep -iq "yes"
         then
@@ -752,6 +752,9 @@ ubuntuSetupSessionManagerBroker()
     fi
     sudo apt install -y ./nice-dcv-session-manager-broker*ubuntu*.deb
     rm -f nice-dcv-session-manager-broker*ubuntu*.deb
+
+    sudo systemctl enable --now dcv-session-manager-broker
+    sudo systemctl restart dcv-session-manager-broker
 }
 
 ubuntuSetupSessionManagerAgent()
@@ -781,7 +784,7 @@ ubuntuSetupSessionManagerAgent()
     sudo apt install -y ./nice-dcv-session-manager-agent*.deb
     rm -f ./nice-dcv-session-manager-agent*.deb
 
-	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
+	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
 	
 	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
@@ -836,7 +839,7 @@ directory = '/var/log/dcv-session-manager-agent/'
 # tls_strict = false
 EOF
 
-	sudo cp /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
 	sudo systemctl restart dcv-session-manager-broker
 	sudo systemctl enable --now dcv-session-manager-agent
 }
@@ -875,8 +878,8 @@ ubuntuSetupSessionManagerGateway()
 
     cat << EOF | sudo tee $dcv_gateway_config_file
 [gateway]
-web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
-quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
+web-listen-endpoints = ["0.0.0.0:$gateway_web_port"]
+quic-listen-endpoints = ["0.0.0.0:$gateway_quic_port"]
 cert-file = "$dcv_gateway_cert"
 cert-key-file = "$dcv_gateway_key"
 
@@ -887,15 +890,19 @@ url = "https://localhost:${gateway_resolver_port}"
 url = "https://localhost:${gateway_web_resources}"
 EOF
 
+        createDcvGatewaySsl
+
         if [ -f $dcv_broker_config_file ]
         then
             sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
-            sudo sed -i "s/^#gatewayhttpsport.*/gateway-to-broker-connector-https-port = $gateway_to_broker_port/" $dcv_broker_config_file
-            sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
-            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
+            sudo cp -f $broker_ssl_cert $dcv_gateway_cert
+            sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.key $dcv_gateway_key
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_cert
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_key
         fi
 
-        createDcvGatewaySsl
 
         if ! id -u $dcv_gateway_user > /dev/null 2>&1
         then
@@ -1545,8 +1552,8 @@ centosSetupSessionManagerGateway()
 
         cat << EOF | sudo tee $dcv_gateway_config_file
 [gateway]
-web-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
-quic-listen-endpoints = ["0.0.0.0:$gateway_to_broker_port"]
+web-listen-endpoints = ["0.0.0.0:$gateway_web_port"]
+quic-listen-endpoints = ["0.0.0.0:$gateway_quic_port"]
 cert-file = "$dcv_gateway_cert"
 cert-key-file = "$dcv_gateway_key"
 
@@ -1557,15 +1564,18 @@ url = "https://localhost:${gateway_resolver_port}"
 url = "https://localhost:${gateway_web_resources}"
 EOF
 
+        createDcvGatewaySsl
+
         if [ -f $dcv_broker_config_file ]
         then
     		sudo sed -i "s/^enable-gateway.*=.*/enable-gateway = true/" $dcv_broker_config_file
-    	    sudo sed -i "s/^#gatewayhttpsport.*/gateway-to-broker-connector-https-port = $gateway_to_broker_port/" $dcv_broker_config_file
-    	    sudo sed -i "s/^#gatewaybindhost.*/gateway-to-broker-connector-bind-host = 0.0.0.0/" $dcv_broker_config_file
-    		sudo cp -f /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem ${HOME}/
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-https-port = $gateway_to_broker_port" $dcv_broker_config_file
+            sudo sed -i "/^enable-gateway.*=.*/a gateway-to-broker-connector-bind-host = 0.0.0.0" $dcv_broker_config_file
+            sudo cp -f $broker_ssl_cert $dcv_gateway_cert
+            sudo cp -f $broker_ssl_key $dcv_gateway_key
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_cert
+            sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_key
         fi
-
-        createDcvGatewaySsl
 
         if ! id -u $dcv_gateway_user > /dev/null 2>&1
         then 
@@ -1606,7 +1616,7 @@ centosSetupSessionManagerAgent()
         else
             rm -f nice-dcv-session-manager-agent*.rpm
         fi
-    	sudo cp dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/
+    	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
 	
     	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
@@ -1661,7 +1671,7 @@ directory = '/var/log/dcv-session-manager-agent/'
 # tls_strict = false
 EOF
 
-		sudo cp /var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+		sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
 		sudo systemctl restart dcv-session-manager-broker
 		sudo systemctl enable --now dcv-session-manager-agent
 	else
@@ -1690,6 +1700,9 @@ registerFirstApiClient()
 
 setupSessionManagerCli()
 {
+    current_dir=$(pwd)
+    mkdir -p $dcv_cli_path
+    cd $dcv_cli_path
     wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
     if [ $? -eq 0 ]
     then
@@ -1731,6 +1744,7 @@ EOF
         echo "Failed to download the CLI installer. Aborting..."
     	exit 6
     fi
+    cd "$current_dir"
 }
 
 setFirewalldRules()
@@ -1829,7 +1843,7 @@ announceHowTheScriptWorks()
     echo -e         "  NI SP GmbH / info@ni-sp.com / www.ni-sp.com " 
     echo -e         "#####################################################################${NC}"
     echo
-    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (with and without GPU support). If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
+    echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (with and without GPU support). The GPU support does not affect DCV Session Manager components. If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
     echo
     echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV port. We will avoid to use ports already in use in your system. If you have a fresh install and is not an IT person, just continue with all default values."
     echo
@@ -1867,18 +1881,23 @@ DCV_VERSION=2023.1
 #DCV_SM_CLI_VERSION=""
 broker_url=""
 broker_ip=""
+broker_ssl_cert="/etc/dcv-session-manager-agent/dcvsmbroker_ca.pem"
+broker_ssl_key="/etc/dcv-session-manager-agent/dcvsmbroker_ca.key"
 broker_hostname="localhost"
 client_to_broker_port="8448"
 agent_to_broker_port="8445"
-gateway_to_broker_port="8447"
-gateway_resolver_port="9000"
+gateway_to_broker_port="8449"
+gateway_resolver_port=${gateway_to_broker_port}
 gateway_web_resources="9001"
+gateway_web_port="8447"
+gateway_quic_port="8447"
 dcv_port="8443"
 port_used=1
 dcv_will_be_installed="false"
 dcv_gpu_support="false"
 dcv_gpu_type="none"
 dcv_cli_hostname="localhost"
+dcv_cli_path="/opt/dcvsm-cli/"
 dcv_broker_config_file="/etc/dcv-session-manager-broker/session-manager-broker.properties"
 dcv_gateway_config_file="/etc/dcv-connection-gateway/dcv-connection-gateway.conf"
 dcv_gateway_cert_gen="/usr/share/dcv-session-manager-broker/bin/gen-gateway-certificates.sh"
