@@ -768,8 +768,13 @@ ubuntuSetupSessionManagerAgent()
     sudo apt install -y ./nice-dcv-session-manager-agent*.deb
     rm -f ./nice-dcv-session-manager-agent*.deb
 
-	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
-	
+    if [ -f $broker_ssl_cert ]
+    then
+    	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
+        sudo chown root:root /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+        sudo chmod 644 /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+    fi
+
 	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
 [agent]
@@ -822,8 +827,10 @@ directory = '/var/log/dcv-session-manager-agent/'
 #rotation = 'daily'
 # tls_strict = false
 EOF
-
-	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+    if [ -f $broker_ssl_cert ]
+    then
+	    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+    fi
 	sudo systemctl restart dcv-session-manager-broker
 	sudo systemctl enable --now dcv-session-manager-agent
 }
@@ -1602,8 +1609,13 @@ centosSetupSessionManagerAgent()
         else
             rm -f nice-dcv-session-manager-agent*.rpm
         fi
-    	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
-	
+
+        if [ -f $broker_ssl_cert ]
+        then
+        	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
+            sudo chown root:root /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+            sudo chmod 644 /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+	    fi
     	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
 [agent]
@@ -1656,8 +1668,10 @@ directory = '/var/log/dcv-session-manager-agent/'
 #rotation = 'daily'
 # tls_strict = false
 EOF
-
-		sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+        if [ -f $broker_ssl_cert ]
+        then
+		    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+        fi
 		sudo systemctl restart dcv-session-manager-broker
 		sudo systemctl enable --now dcv-session-manager-agent
 	else
