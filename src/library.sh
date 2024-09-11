@@ -1174,6 +1174,8 @@ web-port=$dcv_port
 
 [security]
 
+no-tls-strict=true
+
 # Property "authentication" specifies the client authentication method used by
 # the DCV server. Use 'system' to delegate client authentication to the
 # underlying operating system. Use 'none' to disable client authentication and
