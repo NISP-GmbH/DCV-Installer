@@ -1694,8 +1694,12 @@ registerFirstApiClient()
     dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
     client_id=${client_id//$'\n'/}
     client_pass=${client_pass//$'\n'/}
-    sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
-    sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
+
+    if [ -f $dcv_sm_cli_conf_file ]
+    then
+        sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
+        sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
+    fi
 }
 
 setupSessionManagerCli()
