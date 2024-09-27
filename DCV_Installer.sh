@@ -784,8 +784,13 @@ ubuntuSetupSessionManagerAgent()
     sudo apt install -y ./nice-dcv-session-manager-agent*.deb
     rm -f ./nice-dcv-session-manager-agent*.deb
 
-	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
-	
+    if [ -f $broker_ssl_cert ]
+    then
+    	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
+        sudo chown root:root /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+        sudo chmod 644 /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+    fi
+
 	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
 [agent]
@@ -838,8 +843,10 @@ directory = '/var/log/dcv-session-manager-agent/'
 #rotation = 'daily'
 # tls_strict = false
 EOF
-
-	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+    if [ -f $broker_ssl_cert ]
+    then
+	    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+    fi
 	sudo systemctl restart dcv-session-manager-broker
 	sudo systemctl enable --now dcv-session-manager-agent
 }
@@ -1618,8 +1625,13 @@ centosSetupSessionManagerAgent()
         else
             rm -f nice-dcv-session-manager-agent*.rpm
         fi
-    	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
-	
+
+        if [ -f $broker_ssl_cert ]
+        then
+        	sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/
+            sudo chown root:root /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+            sudo chmod 644 /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+	    fi
     	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
 version = '0.1'
 [agent]
@@ -1672,8 +1684,10 @@ directory = '/var/log/dcv-session-manager-agent/'
 #rotation = 'daily'
 # tls_strict = false
 EOF
-
-		sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
+        if [ -f $broker_ssl_cert ]
+        then
+		    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
+        fi
 		sudo systemctl restart dcv-session-manager-broker
 		sudo systemctl enable --now dcv-session-manager-agent
 	else
@@ -1696,8 +1710,12 @@ registerFirstApiClient()
     dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
     client_id=${client_id//$'\n'/}
     client_pass=${client_pass//$'\n'/}
-    sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
-    sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
+
+    if [ -f $dcv_sm_cli_conf_file ]
+    then
+        sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
+        sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
+    fi
 }
 
 setupSessionManagerCli()
@@ -1883,8 +1901,8 @@ DCV_VERSION=2023.1
 #DCV_SM_CLI_VERSION=""
 broker_url=""
 broker_ip=""
-broker_ssl_cert="/etc/dcv-session-manager-agent/dcvsmbroker_ca.pem"
-broker_ssl_key="/etc/dcv-session-manager-agent/dcvsmbroker_ca.key"
+broker_ssl_cert="/var/lib/dcvsmbroker/security/dcvsmbroker_ca.pem"
+broker_ssl_key="/var/lib/dcvsmbroker/security/dcvsmbroker_ca.key"
 broker_hostname="localhost"
 client_to_broker_port="8448"
 agent_to_broker_port="8445"
