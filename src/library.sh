@@ -764,6 +764,82 @@ ubuntuSetupSessionManagerBroker()
     sudo apt install -qqy ./nice-dcv-session-manager-broker*ubuntu*.deb > /dev/null 2>&1
     rm -f nice-dcv-session-manager-broker*ubuntu*.deb
 
+    cat << EOF | sudo tee $dcv_broker_config_file > /dev/null 2>&1
+# session-manager-working-path = /tmp
+enable-authorization-server = true
+enable-authorization = true
+enable-agent-authorization = true
+enable-persistence = false
+# enable-persistence = true
+# persistence-db = dynamodb
+# dynamodb-region = us-east-1
+# dynamodb-table-rcu = 10
+# dynamodb-table-wcu = 10
+# dynamodb-table-name-prefix = DcvSm-
+# jdbc-connection-url = jdbc:mysql://database-mysql.rds.amazonaws.com:3306/database-mysql
+# jdbc-user = admin
+# jdbc-password = password
+# enable-api-yaml = true
+connect-session-token-duration-minutes = 60
+delete-session-duration-seconds = 3600
+# create-sessions-number-of-retries-on-failure = 2
+# autorun-file-arguments-max-size = 50
+# autorun-file-arguments-max-argument-length = 150
+# broker-java-home =
+
+client-to-broker-connector-https-port = $client_to_broker_port
+client-to-broker-connector-bind-host = 0.0.0.0
+#clienttobrokerkeystorefile
+#clienttobrokerkeypass
+#enabletlsclientauthgateway
+# enable-tls-client-auth-gateway = true
+# client-to-broker-connector-key-store-file = test_security/KeyStore.jks
+# client-to-broker-connector-key-store-pass = dcvsm1
+agent-to-broker-connector-https-port = $agent_to_broker_port
+agent-to-broker-connector-bind-host = 0.0.0.0
+#agenttobrokerkeystorefile
+#agenttobrokerkeypass
+# agent-to-broker-connector-key-store-file = test_security/KeyStore.jks
+# agent-to-broker-connector-key-store-pass = dcvsm1
+
+enable-gateway = false
+#gatewayhttpsport
+#gatewaybindhost
+#gatewaytobrokerkeystorefile
+#gatewaytobrokerkeypass
+# gateway-to-broker-connector-key-store-file = test_security/KeyStore.jks
+# gateway-to-broker-connector-key-store-pass = dcvsm1
+#gatewaytobrokertruststorefile
+#gatewaytobrokertrustpass
+# gateway-to-broker-connector-trust-store-file = test_security/TrustStore.jks
+# gateway-to-broker-connector-trust-store-pass = dcvsm1
+
+# Broker To Broker
+broker-to-broker-port = 47100
+cli-to-broker-port = 47200
+broker-to-broker-bind-host = 0.0.0.0
+broker-to-broker-discovery-port = 47500
+broker-to-broker-discovery-addresses = 127.0.0.1:47500
+# broker-to-broker-discovery-multicast-group = 127.0.0.1
+# broker-to-broker-discovery-multicast-port = 47400
+# broker-to-broker-discovery-aws-region = us-east-1
+# broker-to-broker-discovery-aws-alb-target-group-arn = ...
+broker-to-broker-distributed-memory-max-size-mb = 4096
+#brokertobrokerkeystorefile
+#brokertobrokerstorepass
+# broker-to-broker-key-store-file = test_security/KeyStore.jks
+# broker-to-broker-key-store-pass = dcvsm1
+broker-to-broker-connection-login = dcvsm-user
+broker-to-broker-connection-pass = dcvsm-pass
+
+# Metrics
+# metrics-fleet-name-dimension = default
+enable-cloud-watch-metrics = false
+# if cloud-watch-region is not provided, the region is taken from EC2 IMDS
+# cloud-watch-region = us-east-1
+session-manager-working-path = /var/lib/dcvsmbroker
+EOF
+
     sudo systemctl enable --now dcv-session-manager-broker
     sudo systemctl restart dcv-session-manager-broker
 }
