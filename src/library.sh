@@ -377,7 +377,7 @@ askThePort()
 
 ubuntuImportKey()
 {
-    wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+    wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null 2>&1
     sudo gpg --import NICE-GPG-KEY
     rm -f NICE-GPG-KEY
 }
@@ -448,7 +448,7 @@ EOF
 
 ubuntuSetupNvidiaDriver()
 {
-    wget --no-check-certificate $url_nvidia_tesla_driver
+    wget -q --no-check-certificate $url_nvidia_tesla_driver > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo "Failed to download the NVIDIA Driver. Aborting..."
@@ -475,7 +475,7 @@ EOF
         cat << EOF | sudo tee --append /etc/modprobe.d/20-amdgpu.conf
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
-        wget --no-check-certificate $url_amd_ubuntu_driver
+        wget -q --no-check-certificate $url_amd_ubuntu_driver > /dev/null 2>&1
         if [ $? -ne 0 ]
         then
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
@@ -498,7 +498,7 @@ EOF
         cat <<EOF> /etc/modprobe.d/20-amdgpu.conf
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
-        wget --no-check-certificate $url_amd_ubuntu_driver
+        wget -q --no-check-certificate $url_amd_ubuntu_driver > /dev/null 2>&1
         if [ $? -ne 0 ]
         then
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
@@ -552,7 +552,7 @@ ubuntuSetupNiceDcvServer()
             ;;
     esac
 
-    wget --no-check-certificate $dcv_server
+    wget -q --no-check-certificate $dcv_server > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
@@ -734,7 +734,7 @@ ubuntuSetupSessionManagerBroker()
             ;;
     esac
 
-    wget --no-check-certificate $dcv_broker
+    wget -q --no-check-certificate $dcv_broker > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv broker package to setup the service. Aborting..."
@@ -768,7 +768,7 @@ ubuntuSetupSessionManagerAgent()
             ;;
     esac
 
-    wget --no-check-certificate $dcv_agent
+    wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv agent package to setup the service. Aborting..."
@@ -869,7 +869,7 @@ ubuntuSetupSessionManagerGateway()
             ;;
     esac
 
-    wget --no-check-certificate $dcv_gateway
+    wget -q --no-check-certificate $dcv_gateway > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv gateway package to setup the service. Aborting..."
@@ -962,7 +962,7 @@ EOF
 
 centosSetupNvidiaDriver()
 {
-    wget --no-check-certificate $url_nvidia_tesla_driver
+    wget -q --no-check-certificate $url_nvidia_tesla_driver > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo "Failed to download the NVIDIA driver. Aborting..."
@@ -1041,7 +1041,7 @@ centosSetupNiceDcvServer()
         exit 22
     fi
 
-	wget --no-check-certificate $dcv_server
+	wget -q --no-check-certificate $dcv_server > /dev/null 2>&1
 	if [ $? -eq 0 ]
 	then
 		tar zxvf nice-dcv-*el${redhat_distro_based_version}*.tgz
@@ -1433,7 +1433,7 @@ centosSetupSessionManagerBroker()
 
     dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
 
-	wget --no-check-certificate $dcv_broker
+	wget -q --no-check-certificate $dcv_broker > /dev/null 2>&1
 	
     if [ $? -eq 0 ]
     then
@@ -1544,7 +1544,7 @@ centosSetupSessionManagerGateway()
 
     dcv_gateway="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
 
-	wget --no-check-certificate $dcv_gateway
+	wget -q --no-check-certificate $dcv_gateway > /dev/null 2>&1
 
     if [ $? -eq 0 ]
     then
@@ -1609,7 +1609,7 @@ centosSetupSessionManagerAgent()
     fi
 
     dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
-    wget --no-check-certificate $dcv_agent
+    wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
 
     if [ $? -eq 0 ]
     then
@@ -1720,7 +1720,7 @@ setupSessionManagerCli()
     current_dir=$(pwd)
     mkdir -p $dcv_cli_path
     cd $dcv_cli_path
-    wget --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip
+    wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
         unzip nice-dcv-session-manager-cli.zip
