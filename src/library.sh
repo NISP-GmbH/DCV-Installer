@@ -73,7 +73,7 @@ checkLinuxDistro()
 
 disableIpv6()
 {
-	cat << EOF | sudo tee --append /etc/sysctl.conf
+	cat << EOF | sudo tee --append /etc/sysctl.conf > /dev/null 2>&1
 net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.default.disable_ipv6 = 1
 net.ipv6.conf.lo.disable_ipv6 = 1
@@ -84,7 +84,7 @@ EOF
 
 enableIpv6()
 {
-    cat << EOF | sudo tee --append /etc/sysctl.conf
+    cat << EOF | sudo tee --append /etc/sysctl.conf > /dev/null 2>&1
 net.ipv6.conf.all.disable_ipv6 = 0
 net.ipv6.conf.default.disable_ipv6 = 0
 net.ipv6.conf.lo.disable_ipv6 = 0
@@ -430,9 +430,9 @@ ubuntuSetupRequiredPackages()
 
     echo "Restarting graphic services..."
     sudo systemctl restart gdm3
-    sudo systemctl get-default
-    sudo systemctl set-default graphical.target
-    sudo systemctl isolate graphical.target
+    sudo systemctl get-default > /dev/null 2>&1
+    sudo systemctl set-default graphical.target > /dev/null 2>&1
+    sudo systemctl isolate graphical.target > /dev/null 2>&1
 }
 
 ubuntuSetupNiceDcvWithGpuPrepareBase()
@@ -444,7 +444,7 @@ ubuntuSetupNiceDcvWithGpuPrepareBase()
     echo "Blacklisting some kernel modules..."
     if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
     then  
-        cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
+        cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf > /dev/null 2>&1
 blacklist vga16fb
 blacklist nouveau
 blacklist rivafb
@@ -456,7 +456,7 @@ EOF
     echo "Blocking nouveau in GRUB_CMDLINE_LINUX..."
     if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
     then  
-        echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
+        echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null 2>&1
         sudo update-grub
     fi
 }
@@ -483,13 +483,13 @@ ubuntuSetupAmdDriver()
     if [ $ubuntu_major_version -eq 22 ]
     then
         sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext > /dev/null 2>&1
-        cat << EOF | sudo tee --append /etc/X11/xorg.conf.d/20-amdgpu.conf
+        cat << EOF | sudo tee --append /etc/X11/xorg.conf.d/20-amdgpu.conf > /dev/null 2>&1
 Section "Device"
     Identifier "AMD"
     Driver "amdgpu"
 EndSection
 EOF
-        cat << EOF | sudo tee --append /etc/modprobe.d/20-amdgpu.conf
+        cat << EOF | sudo tee --append /etc/modprobe.d/20-amdgpu.conf > /dev/null 2>&1
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
         wget -q --no-check-certificate $url_amd_ubuntu_driver > /dev/null 2>&1
@@ -599,7 +599,7 @@ ubuntuSetupNiceDcvServer()
     sudo sed -ie 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
     sudo systemctl isolate multi-user.target
     sudo dcvgladmin enable
-    sudo systemctl isolate graphical.target
+    sudo systemctl isolate graphical.target > /dev/null 2>&1
     sudo systemctl enable --now dcvserver
 
     setFirewalldRules "dcvonly"
@@ -688,7 +688,7 @@ ubuntuSetupNiceDcvWithoutGpu()
 		sudo cp /etc/X11/xorg.conf /etc/X11/xorg.conf-BACKUP
 	fi
 
-	cat << EOF | sudo tee /etc/X11/xorg.conf
+	cat << EOF | sudo tee /etc/X11/xorg.conf > /dev/null 2>&1
 Section "Device"
     Identifier "DummyDevice"
     Driver "dummy"
@@ -724,9 +724,9 @@ Section "Screen"
 EndSection
 EOF
 
-    sudo systemctl get-default
-    sudo systemctl set-default graphical.target
-    sudo systemctl isolate graphical.target
+    sudo systemctl get-default > /dev/null 2>&1
+    sudo systemctl set-default graphical.target > /dev/null 2>&1
+    sudo systemctl isolate graphical.target > /dev/null 2>&1
     finishNiceDcvServerSetup
 }
 
@@ -806,7 +806,7 @@ ubuntuSetupSessionManagerAgent()
         sudo chmod 644 /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
     fi
 
-	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
+	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf > /dev/null 2>&1
 version = '0.1'
 [agent]
 
@@ -902,7 +902,7 @@ ubuntuSetupSessionManagerGateway()
     sudo apt install -qqy ./nice-dcv-connection-gateway*.deb > /dev/null 2>&1
     rm -f ./nice-dcv-connection-gateway*.deb
 
-    cat << EOF | sudo tee $dcv_gateway_config_file
+    cat << EOF | sudo tee $dcv_gateway_config_file > /dev/null 2>&1
 [gateway]
 web-listen-endpoints = ["0.0.0.0:$gateway_web_port"]
 quic-listen-endpoints = ["0.0.0.0:$gateway_quic_port"]
@@ -968,15 +968,15 @@ centosSetupNiceDcvWithGpuPrepareBase()
     # setup server GUI
     echo "Installing graphical interface..."
     sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
-    sudo systemctl get-default
-    sudo systemctl set-default graphical.target
-    sudo systemctl isolate graphical.target
+    sudo systemctl get-default > /dev/null 2>&1
+    sudo systemctl set-default graphical.target > /dev/null 2>&1
+    sudo systemctl isolate graphical.target > /dev/null 2>&1
     sudo yum install glx-utils -y > /dev/null 2>&1
 
     # prepare to setup nvidia driver
     sudo yum erase nvidia cuda
     sudo yum install -y make gcc kernel-devel-$(uname -r) wget > /dev/null 2>&1
-    cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf
+    cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf > /dev/null 2>&1
 blacklist vga16fb
 blacklist nouveau
 blacklist rivafb
@@ -1011,7 +1011,7 @@ centosSetupAmdDriver()
 
 adaptColord()
 {
-    cat << EOF | sudo tee --append /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla
+    cat << EOF | sudo tee --append /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla > /dev/null 2>&1
 [Allow Colord all Users]
 Identity=unix-user:*
 Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile
@@ -1084,10 +1084,10 @@ centosSetupNiceDcvServer()
         	echo "Failed to setup the DCV Server. Aborting..."
         	exit 10
     	fi
-		sudo systemctl isolate multi-user.target
-		sudo systemctl isolate graphical.target
+		sudo systemctl isolate multi-user.target > /dev/null 2>&1
+		sudo systemctl isolate graphical.target > /dev/null 2>&1
 
-    cat <<EOF | sudo tee /etc/dcv/dcv.conf
+    cat <<EOF | sudo tee /etc/dcv/dcv.conf > /dev/null 2>&1
 ###############################################################################
 ## Section "license" contains properties to configure the the license management
 ###############################################################################
@@ -1355,9 +1355,9 @@ centosSetupNiceDcvWithoutGpu()
 		exit 8
 	fi
 
-	sudo systemctl get-default
-	sudo systemctl set-default graphical.target
-	sudo systemctl isolate graphical.target
+	sudo systemctl get-default > /dev/null 2>&1
+	sudo systemctl set-default graphical.target > /dev/null 2>&1
+	sudo systemctl isolate graphical.target > /dev/null 2>&1
 	sudo yum -y install glx-utils xorg-x11-drv-dummy git > /dev/null 2>&1
     if [ $? -ne 0 ]
     then
@@ -1371,7 +1371,7 @@ centosSetupNiceDcvWithoutGpu()
 		sudo cp /etc/X11/xorg.conf /etc/X11/xorg.conf-BACKUP
 	fi
 
-	cat << EOF | sudo tee /etc/X11/xorg.conf
+	cat << EOF | sudo tee /etc/X11/xorg.conf > /dev/null 2>&1
 Section "Device"
     Identifier "DummyDevice"
     Driver "dummy"
@@ -1408,8 +1408,8 @@ EndSection
 EOF
 
     echo "Restarting graphical services..."
-	sudo systemctl isolate multi-user.target
-	sudo systemctl isolate graphical.target
+	sudo systemctl isolate multi-user.target > /dev/null 2>&1
+	sudo systemctl isolate graphical.target > /dev/null 2>&1
     centosSetupNiceDcvServer
     finishNiceDcvServerSetup
 }
@@ -1485,7 +1485,7 @@ centosSetupSessionManagerBroker()
         	echo "Failed to setup the Session Manager Broker. Aborting..."
         	exit 14
     	fi
-		cat << EOF | sudo tee $dcv_broker_config_file
+		cat << EOF | sudo tee $dcv_broker_config_file > /dev/null 2>&1
 # session-manager-working-path = /tmp
 enable-authorization-server = true
 enable-authorization = true
@@ -1598,7 +1598,7 @@ centosSetupSessionManagerGateway()
 	        exit 15
 	    fi
 
-        cat << EOF | sudo tee $dcv_gateway_config_file
+        cat << EOF | sudo tee $dcv_gateway_config_file > /dev/null 2>&1
 [gateway]
 web-listen-endpoints = ["0.0.0.0:$gateway_web_port"]
 quic-listen-endpoints = ["0.0.0.0:$gateway_quic_port"]
@@ -1672,7 +1672,7 @@ centosSetupSessionManagerAgent()
             sudo chown root:root /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
             sudo chmod 644 /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
 	    fi
-    	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf
+    	cat << EOF | sudo tee /etc/dcv-session-manager-agent/agent.conf > /dev/null 2>&1
 version = '0.1'
 [agent]
 
@@ -1771,7 +1771,7 @@ setupSessionManagerCli()
         cd nice-dcv-session-manager-cli-*/
     	sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
     	dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
-    	cat << EOF | sudo tee $dcv_sm_cli_conf_file
+    	cat << EOF | sudo tee $dcv_sm_cli_conf_file > /dev/null 2>&1
 [output]
 # The formatting style for command output.
 # output-format = json
