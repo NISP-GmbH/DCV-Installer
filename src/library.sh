@@ -432,7 +432,7 @@ ubuntuSetupRequiredPackages()
     fi
 
     echo "Restarting graphic services..."
-    sudo systemctl restart gdm3
+    sudo systemctl restart gdm3 > /dev/null 2>&1
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
@@ -600,10 +600,10 @@ ubuntuSetupNiceDcvServer()
     sudo sed -ie 's/#owner = ""/owner = "ubuntu"/' /etc/dcv/dcv.conf
     sudo sed -ie 's/#create-session = true/create-session = true/' /etc/dcv/dcv.conf
     sudo sed -ie 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
-    sudo systemctl isolate multi-user.target
-    sudo dcvgladmin enable
+    sudo systemctl isolate multi-user.target > /dev/null 2>&1
+    sudo dcvgladmin enable > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
-    sudo systemctl enable --now dcvserver
+    sudo systemctl enable --now dcvserver > /dev/null 2>&1
 
     setFirewalldRules "dcvonly"
 }
@@ -843,8 +843,8 @@ enable-cloud-watch-metrics = false
 session-manager-working-path = /var/lib/dcvsmbroker
 EOF
 
-    sudo systemctl enable --now dcv-session-manager-broker
-    sudo systemctl restart dcv-session-manager-broker
+    sudo systemctl enable --now dcv-session-manager-broker > /dev/null 2>&1
+    sudo systemctl restart dcv-session-manager-broker > /dev/null 2>&1
 }
 
 ubuntuSetupSessionManagerAgent()
@@ -941,8 +941,8 @@ EOF
     then
 	    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
     fi
-	sudo systemctl restart dcv-session-manager-broker
-	sudo systemctl enable --now dcv-session-manager-agent
+	sudo systemctl restart dcv-session-manager-broker > /dev/null 2>&1
+	sudo systemctl enable --now dcv-session-manager-agent > /dev/null 2>&1
 }
 
 ubuntuSetupSessionManagerGateway()
@@ -1019,8 +1019,8 @@ EOF
             groupadd $dcv_gateway_group
         fi
 
-        sudo systemctl enable --now dcv-connection-gateway
-        sudo systemctl restart dcv-connection-gateway
+        sudo systemctl enable --now dcv-connection-gateway > /dev/null 2>&1
+        sudo systemctl restart dcv-connection-gateway > /dev/null 2>&1
 }
 
 ubuntuConfigureFirewall()
@@ -1326,7 +1326,7 @@ primary-selection-copy=true
 EOF
 		cd
         createDcvSsl
-		sudo systemctl enable --now dcvserver
+		sudo systemctl enable --now dcvserver > /dev/null 2>&1
 	else
 		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
 		exit 1
@@ -1638,7 +1638,7 @@ enable-cloud-watch-metrics = false
 # cloud-watch-region = us-east-1
 session-manager-working-path = /var/lib/dcvsmbroker
 EOF
-		sudo systemctl enable --now dcv-session-manager-broker
+		sudo systemctl enable --now dcv-session-manager-broker > /dev/null 2>&1
 	else
 		echo "Failed to download the broker installer. Aborting..."
 		exit 4
@@ -1713,8 +1713,8 @@ EOF
             groupadd $dcv_gateway_group
         fi
 
-		sudo systemctl enable --now dcv-connection-gateway
-		sudo systemctl restart dcv-connection-gateway
+		sudo systemctl enable --now dcv-connection-gateway > /dev/null 2>&1
+		sudo systemctl restart dcv-connection-gateway > /dev/null 2>&1
 	else
 		echo "Failed to download the Gateway installer. Aborting..."
 		exit 7
@@ -1806,8 +1806,8 @@ EOF
         then
 		    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
         fi
-		sudo systemctl restart dcv-session-manager-broker
-		sudo systemctl enable --now dcv-session-manager-agent
+		sudo systemctl restart dcv-session-manager-broker > /dev/null 2>&1
+		sudo systemctl enable --now dcv-session-manager-agent > /dev/null 2>&1
 	else
 		echo "Failed to download the client installer. Aborting..."
 		exit 5
