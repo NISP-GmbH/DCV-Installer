@@ -397,6 +397,7 @@ ubuntuSetupRequiredPackages()
     sudo apt -qq update > /dev/null 2>&1
     export DEBIAN_FRONTEND=noninteractive
 
+    echo "Installing graphical interface..."
     case "${ubuntu_version}" in
         "18.04")
             sudo apt -qqy install tasksel > /dev/null 2>&1
@@ -405,11 +406,13 @@ ubuntuSetupRequiredPackages()
         "20.04")
             sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
             sudo apt -qqy install gdm3 > /dev/null 2>&1
+            echo "Doing apt upgrade..."
             sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
         "22.04")
             sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
             sudo apt -qqy install gdm3 > /dev/null 2>&1
+            echo "Doing apt upgrade..."
             sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
     esac
