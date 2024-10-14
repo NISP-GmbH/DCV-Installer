@@ -1509,7 +1509,7 @@ centosImportKey()
 
 centosSetupRequiredPackages()
 {
-    echo "Updating the system ... sudo yum -y update"
+    echo "Updating the system ..."
 	sudo yum -y update > /dev/null 2>&1
 	if [ $? -ne 0 ]
     then
