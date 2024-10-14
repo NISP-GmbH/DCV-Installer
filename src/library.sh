@@ -1927,7 +1927,7 @@ setFirewalldRules()
     	fi
     fi
 
-    sudo firewall-cmd --reload
+    sudo firewall-cmd --reload > /dev/null 2>&1
     sudo iptables-save 
 }
 
