@@ -1040,7 +1040,6 @@ ubuntuConfigureFirewall()
 centosSetupNiceDcvWithGpuPrepareBase()
 {
     echo "Preparing CentOS..."
-    # upgrade
     echo "Doing yum upgrade..."
     sudo yum upgrade -y > /dev/null 2>&1
 
