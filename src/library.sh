@@ -1033,7 +1033,7 @@ centos9SpecificSettings()
 
 centosSetupNiceDcvServer()
 {
-	dcv_server=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
+    dcv_server="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
 
     if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
     then
@@ -1431,7 +1431,8 @@ centosSetupSessionManagerBroker()
 
     genericSetupSessionManagerBroker
 
-    dcv_broker=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep broker | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+    dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
+
 	wget --no-check-certificate $dcv_broker
 	
     if [ $? -eq 0 ]
@@ -1541,7 +1542,7 @@ centosSetupSessionManagerGateway()
 
     genericSetupSessionManagerGateway
 
-	dcv_gateway=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep gateway | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+    dcv_gateway="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
 
 	wget --no-check-certificate $dcv_gateway
 
@@ -1607,7 +1608,7 @@ centosSetupSessionManagerAgent()
         return 0
     fi
 
-    dcv_agent=$(curl -k --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "el${redhat_distro_based_version}" | grep agent | sed -e 's/.*http/http/' -e 's/rpm.*/rpm/' | head -1)
+    dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
     wget --no-check-certificate $dcv_agent
 
     if [ $? -eq 0 ]
