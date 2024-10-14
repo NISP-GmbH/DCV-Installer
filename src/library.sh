@@ -542,10 +542,13 @@ ubuntuSetupNiceDcvServer()
             dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
             ;;
         "20.04")
-            dcv_server=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
+            dcv_server=$aws_dcv_download_uri_server_ubuntu2004
             ;;
         "22.04")
-            dcv_server=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Server | sed -e 's/.*http/http/' -e 's/tgz.*/tgz/' | head -1)
+            dcv_server=$aws_dcv_download_uri_server_ubuntu2204
+            ;;
+        "24.04")
+            dcv_server=$aws_dcv_download_uri_server_ubuntu2204
             ;;
     esac
 
@@ -721,10 +724,13 @@ ubuntuSetupSessionManagerBroker()
             dcv_broker="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerBrokers/nice-dcv-session-manager-broker_2021.3.307-1_all.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_broker=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker i | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            dcv_broker=$aws_dcv_download_uri_broker_ubuntu2004
             ;;
         "22.04")
-            dcv_broker=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Broker | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            dcv_broker=$aws_dcv_download_uri_broker_ubuntu2204
+            ;;
+        "22.04")
+            dcv_broker=$aws_dcv_download_uri_broker_ubuntu2404
             ;;
     esac
 
@@ -752,10 +758,13 @@ ubuntuSetupSessionManagerAgent()
             dcv_agent="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_agent=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            dcv_agent=$aws_dcv_download_uri_agent_ubuntu2004
             ;;
         "22.04")
-            dcv_agent=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep agent | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            dcv_agent=$aws_dcv_download_uri_agent_ubuntu2204
+            ;;
+        "24.04")
+            dcv_agent=$aws_dcv_download_uri_agent_ubuntu2404
             ;;
     esac
 
@@ -850,10 +859,13 @@ ubuntuSetupSessionManagerGateway()
             dcv_gateway="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Gateway/nice-dcv-connection-gateway_2021.3.251-1_amd64.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_gateway=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2004
             ;;
         "22.04")
-            dcv_gateway=$(curl --silent --output - https://download.nice-dcv.com/ | grep href | egrep "$dcv_version" | grep "ubuntu${ubuntu_major_version}${ubuntu_minor_version}" | grep Gateway | sed -e 's/.*http/http/' -e 's/deb.*/deb/' | head -1)
+            dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2204
+            ;;
+        "24.04")
+            echo "Warning: DCV Gateway is not available for Ubuntu 24.04!"
             ;;
     esac
 
