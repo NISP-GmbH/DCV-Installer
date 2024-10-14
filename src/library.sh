@@ -384,23 +384,23 @@ ubuntuImportKey()
 
 ubuntuSetupRequiredPackages()
 {
-    sudo apt update
+    sudo apt -qq update > /dev/null 2>&1
     export DEBIAN_FRONTEND=noninteractive
 
     case "${ubuntu_version}" in
         "18.04")
-            sudo apt -y install tasksel
-            sudo tasksel install ubuntu-desktop
+            sudo apt -qqy install tasksel > /dev/null 2>&1
+            sudo tasksel install ubuntu-desktop > /dev/null 2>&1
             ;;
         "20.04")
-            sudo apt -y install ubuntu-desktop
-            sudo apt -y install gdm3
-            sudo apt -y upgrade
+            sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
+            sudo apt -qqy install gdm3 > /dev/null 2>&1
+            sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
         "22.04")
-            sudo apt -y install ubuntu-desktop
-            sudo apt -y install gdm3
-            sudo apt -y upgrade
+            sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
+            sudo apt -qqy install gdm3 > /dev/null 2>&1
+            sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
     esac
 
@@ -425,8 +425,8 @@ ubuntuSetupRequiredPackages()
 
 ubuntuSetupNiceDcvWithGpuPrepareBase()
 {
-    sudo apt install -y mesa-utils
-    sudo apt-get install -y gcc make linux-headers-$(uname -r)
+    sudo apt install -qqy mesa-utils > /dev/null 2>&1
+    sudo apt install -qqy gcc make linux-headers-$(uname -r) > /dev/null 2>&1
 
     if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
     then  
@@ -461,11 +461,11 @@ ubuntuSetupNvidiaDriver()
 
 ubuntuSetupAmdDriver()
 {
-    sudo apt -y install gcc make awscli bc sharutils
-    sudo apt -y install linux-modules-extra-$(uname -r) linux-firmware
+    sudo apt -qqy install gcc make awscli bc sharutils > /dev/null 2>&1
+    sudo apt -qqy install linux-modules-extra-$(uname -r) linux-firmware > /dev/null 2>&1
     if [ $ubuntu_major_version -eq 22 ]
     then
-        sudo apt -y install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext
+        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext > /dev/null 2>&1
         cat << EOF | sudo tee --append /etc/X11/xorg.conf.d/20-amdgpu.conf
 Section "Device"
     Identifier "AMD"
@@ -481,14 +481,14 @@ EOF
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 31
         fi
-        sudo apt -y install ./amdgpu-install*
-        sudo apt -y install amdgpu-dkms
+        sudo apt -qqy install ./amdgpu-install* > /dev/null 2>&1
+        sudo apt -qqy install amdgpu-dkms > /dev/null 2>&1
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
     fi
 
     if [ $ubuntu_major_version -eq 20 ]
     then
-        sudo apt -y install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext
+        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettex > /dev/null 2>&1t
         cat <<EOF> /usr/share/X11/xorg.conf.d/20-amdgpu.conf
 Section "Device"
     Identifier "AMD"
@@ -504,8 +504,8 @@ EOF
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 32
         fi
-        sudo apt -y install ./amdgpu-install*
-        sudo apt -y install amdgpu-dkms
+        sudo apt -qqy install ./amdgpu-install* > /dev/null 2>&1
+        sudo apt -qqy install amdgpu-dkms > /dev/null 2>&1
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
 
     fi
@@ -558,19 +558,19 @@ ubuntuSetupNiceDcvServer()
         echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
         exit 23
     fi 
-    tar zxvf nice-dcv-*ubun*.tgz
+    tar zxf nice-dcv-*ubun*.tgz > /dev/null 2>&1
     rm -f nice-dcv-*.tgz
     cd nice-dcv-*64
 
-    sudo apt -y install ./nice-dcv-server*
-    sudo apt -y install ./nice-dcv-web-viewer*
-    sudo usermod -aG video dcv
-    sudo apt -y install ./nice-xdcv*
-    sudo apt -y install ./nice-dcv-gl*
-    sudo apt -y install ./nice-dcv-simple-external-authenticato*
-    sudo apt -y install dkms
-    sudo dcvusbdriverinstaller --quiet
-    sudo apt -y install pulseaudio-utils
+    sudo apt -qqy install ./nice-dcv-server* > /dev/null 2>&1
+    sudo apt -qqy install ./nice-dcv-web-viewer* > /dev/null 2>&1
+    sudo usermod -aG video dcv > /dev/null 2>&1
+    sudo apt -qqy install ./nice-xdcv* > /dev/null 2>&1
+    sudo apt -qqy install ./nice-dcv-gl* > /dev/null 2>&1
+    sudo apt -qqy install ./nice-dcv-simple-external-authenticato* > /dev/null 2>&1
+    sudo apt -qqy install dkms > /dev/null 2>&1
+    sudo dcvusbdriverinstaller --quiet > /dev/null 2>&1
+    sudo apt -qqy install pulseaudio-utils > /dev/null 2>&1
 
     rm -rf nice-dcv-*64
     createDcvSsl
@@ -661,7 +661,7 @@ ubuntuSetupNiceDcvWithoutGpu()
 
     ubuntuSetupNiceDcvServer
 
-    sudo apt -y install xserver-xorg-video-dummy
+    sudo apt -qqy install xserver-xorg-video-dummy > /dev/null 2>&1
 
 	if [ -f /etc/X11/xorg.conf  ] 
 	then
@@ -740,7 +740,7 @@ ubuntuSetupSessionManagerBroker()
         echo "Failed to download the right dcv broker package to setup the service. Aborting..."
         exit 26
     fi
-    sudo apt install -y ./nice-dcv-session-manager-broker*ubuntu*.deb
+    sudo apt install -qqy ./nice-dcv-session-manager-broker*ubuntu*.deb > /dev/null 2>&1
     rm -f nice-dcv-session-manager-broker*ubuntu*.deb
 
     sudo systemctl enable --now dcv-session-manager-broker
@@ -774,7 +774,7 @@ ubuntuSetupSessionManagerAgent()
         echo "Failed to download the right dcv agent package to setup the service. Aborting..."
         exit 28
     fi
-    sudo apt install -y ./nice-dcv-session-manager-agent*.deb
+    sudo apt install -qqy ./nice-dcv-session-manager-agent*.deb > /dev/null 2>&1
     rm -f ./nice-dcv-session-manager-agent*.deb
 
     if [ -f $broker_ssl_cert ]
@@ -876,7 +876,7 @@ ubuntuSetupSessionManagerGateway()
         exit 28
     fi
 
-    sudo apt install -y ./nice-dcv-connection-gateway*.deb
+    sudo apt install -qqy ./nice-dcv-connection-gateway*.deb > /dev/null 2>&1
     rm -f ./nice-dcv-connection-gateway*.deb
 
     cat << EOF | sudo tee $dcv_gateway_config_file
@@ -927,7 +927,7 @@ ubuntuConfigureFirewall()
     then
         return 0
     fi
-    sudo apt -y install firewalld
+    sudo apt -qqy install firewalld > /dev/null 2>&1
 
     setFirewalldRules
 	sudo iptables-save 
