@@ -1050,12 +1050,13 @@ centosSetupNiceDcvWithGpuPrepareBase()
     sudo yum upgrade -y > /dev/null 2>&1
 
     # setup server GUI
-    echo "Installing graphical interface..."
+    echo -n "Installing graphical interface..."
     sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
     sudo yum install glx-utils -y > /dev/null 2>&1
+    echo "done."
 
     # prepare to setup nvidia driver
     sudo yum erase nvidia cuda
@@ -1437,9 +1438,8 @@ centosSetupNiceDcvWithoutGpu()
 	then
 		echo "Failed to setup the Server GUI. Aborting..."
 		exit 8
-    else
-        echo "done."
 	fi
+    echo "done."
 
 	sudo systemctl get-default > /dev/null 2>&1
 	sudo systemctl set-default graphical.target > /dev/null 2>&1
