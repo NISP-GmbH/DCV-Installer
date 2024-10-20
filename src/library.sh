@@ -1,3 +1,7 @@
+service_setup_answerClear()
+{
+    service_setup_answer=""
+}
 
 checkLinuxDistro()
 {
@@ -94,6 +98,7 @@ EOF
 
 readTheServiceSetupAnswer()
 {
+    service_setup_answerClear
 	echo -e "If yes, please type \"${GREEN}yes${NC}\" without quotes. Everything else will not be understood as yes."
 	read service_setup_answer
 	service_setup_answer=$(echo $service_setup_answer | tr '[:upper:]' '[:lower:]')
