@@ -1839,15 +1839,15 @@ registerFirstApiClient()
 setupSessionManagerCli()
 {
     current_dir=$(pwd)
-    mkdir -p $dcv_cli_path
+    sudo mkdir -p $dcv_cli_path
     cd $dcv_cli_path
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
-        unzip nice-dcv-session-manager-cli.zip > /dev/null 2>&1
+        sudo unzip nice-dcv-session-manager-cli.zip > /dev/null 2>&1
         rm -f nice-dcv-session-manager-cli.zip
         cd nice-dcv-session-manager-cli-*/
-    	sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
+    	sudo sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
     	dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
     	cat << EOF | sudo tee $dcv_sm_cli_conf_file > /dev/null 2>&1
 [output]
