@@ -1864,7 +1864,7 @@ setupSessionManagerCli()
         sudo rm -f nice-dcv-session-manager-cli.zip
         cd nice-dcv-session-manager-cli-*/
     	sudo sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
-    	dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
+    	dcv_sm_cli_conf_file=$(find $dcv_cli_path -iname dcvsmcli.conf)
     	cat << EOF | sudo tee $dcv_sm_cli_conf_file > /dev/null 2>&1
 [output]
 # The formatting style for command output.
@@ -1973,7 +1973,7 @@ finishTheSetup()
 	echo "- Create a session using DCV SM CLI: ./dcvsm create-session --name sess1 --owner $USER --type Virtual"
 	echo "- Describe all sessions using DCV SM CLI: ./dcvsm describe-sessions"
 	echo "- Delete a session using DCV SM CLI: ./dcvsm delete-session --session-id 3715ea87-c0f0-490f-9f4c-8c24cc9a4d82 --owner $USER"
-	echo "- To change the CLI config, edit the file: conf/dcvsmcli.conf"
+	echo "- To change the CLI config, edit the file: $dcv_sm_cli_conf_file"
 	echo "- Show the registered DCV SM Agents: sudo dcv-session-manager-broker describe-agent-clients"
 	echo "- Register a DCV SM client: dcv-session-manager-broker register-api-client --client-name EF"
 	echo # "-------------------"
