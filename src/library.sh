@@ -741,11 +741,11 @@ EOF
 
 ubuntuSetupSessionManagerBroker()
 {
-    echo "Installing DCV Broker..."
     if [[ $nice_dcv_broker_install_answer != "yes" ]]   
     then
         return 0
     fi
+    echo "Installing DCV Broker..."
 
     genericSetupSessionManagerBroker
 
@@ -855,11 +855,12 @@ EOF
 
 ubuntuSetupSessionManagerAgent()
 { 
-    echo "Installing DCV Agent..."
     if [[ $nice_dcv_agent_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Agent..."
+
     case "${ubuntu_version}" in
         "18.04")
             dcv_agent="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
@@ -953,11 +954,11 @@ EOF
 
 ubuntuSetupSessionManagerGateway()
 {
-    echo "Installing DCV Gateway"
     if [[ $nice_dcv_gateway_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Gateway"
 
     genericSetupSessionManagerGateway
 
@@ -1550,12 +1551,12 @@ genericSetupSessionManagerBroker()
 
 centosSetupSessionManagerBroker()
 {
-    echo "Installing DCV Broker..."
     if [[ $nice_dcv_broker_install_answer != "yes" ]]
     then
         return 0
     fi
 
+    echo "Installing DCV Broker..."
     genericSetupSessionManagerBroker
 
     dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
@@ -1662,11 +1663,11 @@ genericSetupSessionManagerGateway()
 
 centosSetupSessionManagerGateway()
 {
-    echo "Installing DCV Gateway..."
     if [[ $nice_dcv_gateway_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Gateway..."
 
     genericSetupSessionManagerGateway
 
@@ -1731,11 +1732,11 @@ EOF
 
 centosSetupSessionManagerAgent()
 {
-    echo "Installing DCV Agent..."
     if [[ $nice_dcv_agent_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Agent..."
 
     dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
     wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
