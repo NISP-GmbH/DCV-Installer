@@ -1855,7 +1855,7 @@ registerFirstApiClient()
 setupSessionManagerCli()
 {
     current_dir=$(pwd)
-    mkdir -p $dcv_cli_path
+    sudo mkdir -p $dcv_cli_path
     cd $dcv_cli_path
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
     if [ $? -eq 0 ]
