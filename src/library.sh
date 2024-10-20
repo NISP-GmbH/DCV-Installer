@@ -377,14 +377,14 @@ askThePort()
 
 ubuntuImportKey()
 {
-    echo "Importing NICE-GPG-KEY..."
+    echo -n "Importing NICE-GPG-KEY... "
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null 2>&1
     sudo gpg --import NICE-GPG-KEY > /dev/null 2>&1
     return_gpg=$?
     rm -f NICE-GPG-KEY
     if [ $return_gpg -eq 0 ]
     then
-        echo "...done."
+        echo "done."
     else
         echo "Error: Failed to import NICE-GPG-KEY. Exiting..."
         exit 33
@@ -397,7 +397,7 @@ ubuntuSetupRequiredPackages()
     sudo apt -qq update > /dev/null 2>&1
     export DEBIAN_FRONTEND=noninteractive
 
-    echo "Installing graphical interface..."
+    echo -n "Installing graphical interface..."
     case "${ubuntu_version}" in
         "18.04")
             sudo apt -qqy install tasksel > /dev/null 2>&1
@@ -417,6 +417,7 @@ ubuntuSetupRequiredPackages()
             ;;
     esac
 
+    echo "done."
     if [ -f "$gdm3_file" ]
     then
         echo "Disabling Wayland..."
@@ -1425,12 +1426,14 @@ centosSetupNiceDcvWithoutGpu()
         fi
     fi
 	
-    echo "Installing graphical interface..."
+    echo -n "Installing graphical interface..."
 	sudo yum -y groupinstall 'Server with GUI' > /dev/null 2>&1
 	if [ $? -ne 0 ]
 	then
 		echo "Failed to setup the Server GUI. Aborting..."
 		exit 8
+    else
+        echo "done."
 	fi
 
 	sudo systemctl get-default > /dev/null 2>&1
