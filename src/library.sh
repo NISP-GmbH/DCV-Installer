@@ -382,7 +382,7 @@ askThePort()
 
 ubuntuImportKey()
 {
-    echo -n "Importing NICE-GPG-KEY... "
+    echo -n "Importing NICE-GPG-KEY..."
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null 2>&1
     sudo gpg --import NICE-GPG-KEY > /dev/null 2>&1
     return_gpg=$?
@@ -398,9 +398,10 @@ ubuntuImportKey()
 
 ubuntuSetupRequiredPackages()
 {
-    echo "Doing apt update..."
+    echo -n "Doing apt update..."
     sudo apt -qq update > /dev/null 2>&1
     export DEBIAN_FRONTEND=noninteractive
+    echo "done."
 
     echo -n "Installing graphical interface..."
     case "${ubuntu_version}" in
@@ -411,21 +412,30 @@ ubuntuSetupRequiredPackages()
         "20.04")
             sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
             sudo apt -qqy install gdm3 > /dev/null 2>&1
-            echo "Doing apt upgrade..."
-            sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
         "22.04")
             sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
             sudo apt -qqy install gdm3 > /dev/null 2>&1
-            echo "Doing apt upgrade..."
-            sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
     esac
 
     echo "done."
+
+    case "${ubuntu_version}" in
+        "20.04")
+            echo -n "Doing apt upgrade..."
+                sudo apt -qqy upgrade > /dev/null 2>&1
+            ;;
+        "22.04")
+            echo -n "Doing apt upgrade..."
+                sudo apt -qqy upgrade > /dev/null 2>&1
+            ;;
+    esac
+    echo "done."
+
     if [ -f "$gdm3_file" ]
     then
-        echo "Disabling Wayland..."
+        echo -n "Disabling Wayland..."
         cp -a $gdm3_file ${gdm3_file}.backup_$(date +%Y%m%d)
         if grep -q "^WaylandEnable" "$gdm3_file"
         then
@@ -436,12 +446,14 @@ ubuntuSetupRequiredPackages()
     else
         echo "The file $gdm3_file does not exist."
     fi
+    echo "done."
 
-    echo "Restarting graphic services..."
+    echo -n "Restarting graphic services..."
     sudo systemctl restart gdm3 > /dev/null 2>&1
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
+    echo "done."
 }
 
 ubuntuSetupNiceDcvWithGpuPrepareBase()
@@ -1847,8 +1859,15 @@ registerFirstApiClient()
 
 setupSessionManagerCli()
 {
+    if [[ "$nice_dcv_cli_install_answer" != "yes" ]]
+    then
+        return 0
+    fi
+
+    echo -n "Downloading and configuring DCV Session Manaer Cli..."
     current_dir=$(pwd)
     sudo mkdir -p $dcv_cli_path
+    sudo chmod 755 $dcv_cli_path
     cd $dcv_cli_path
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
     if [ $? -eq 0 ]
@@ -1891,6 +1910,7 @@ EOF
         echo "Failed to download the CLI installer. Aborting..."
     	exit 6
     fi
+    echo "done."
     cd "$current_dir"
 }
 
