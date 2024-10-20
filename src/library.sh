@@ -1842,18 +1842,33 @@ registerFirstApiClient()
     echo -e " Working on the DCV SM CLI configuration ... "
     echo -e "#############################################${NC}"
     echo 
+    echo -n "Trying to register the api client... wait for a moment..."
     output=$(sudo dcv-session-manager-broker register-api-client --client-name EF)
+    echo "done."
+
     client_id=${output#*client-id: }
     client_id=${client_id%% client-password:*}
     client_pass=${output#*client-password: }
-    dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
+
+    if [[ "${client_id}x" == "x" ]]
+    then
+        echo "Was not possible to register the client. Please try to manually execute:"
+        echo "sudo dcv-session-manager-broker register-api-client --client-name EF"
+        echo "And configure client-id and client-password into /opt/dcvsm-cli/.../conf/dcvsmcli.conf"
+        echo "Press enter to continue."
+        read pressenter
+    fi
+
+    cd ~
+    cd nice-dcv-session-manager-cli-*/
+    dcv_sm_cli_conf_file=$(find . -iname dcvsmcli.conf)
     client_id=${client_id//$'\n'/}
     client_pass=${client_pass//$'\n'/}
 
-    if [ -f $dcv_sm_cli_conf_file ]
+    if [ -n "$dcv_sm_cli_conf_file" ] && [ -f "$dcv_sm_cli_conf_file" ] && [ -s "$dcv_sm_cli_conf_file" ]
     then
-        sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
-        sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
+        sed -i "s/^client-id =.*/client-id = ${client_id}/" $dcv_sm_cli_conf_file
+        sed -i "s/^client-password =.*/client-password = ${client_pass}/" $dcv_sm_cli_conf_file
     fi
 }
 
@@ -1864,20 +1879,18 @@ setupSessionManagerCli()
         return 0
     fi
 
-    echo -n "Downloading and configuring DCV Session Manaer Cli..."
+    echo -n "Downloading and configuring DCV Session Manager Cli..."
     current_dir=$(pwd)
-    sudo mkdir -p $dcv_cli_path
-    sudo chmod 755 $dcv_cli_path
-    cd $dcv_cli_path
+    cd ~
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
-        sudo unzip nice-dcv-session-manager-cli.zip > /dev/null 2>&1
+        unzip -o nice-dcv-session-manager-cli.zip > /dev/null 2>&1
         rm -f nice-dcv-session-manager-cli.zip
         cd nice-dcv-session-manager-cli-*/
-    	sudo sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
-    	dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
-    	cat << EOF | sudo tee $dcv_sm_cli_conf_file > /dev/null 2>&1
+    	sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
+    	dcv_sm_cli_conf_file=$(find . -iname dcvsmcli.conf)
+    	cat << EOF | tee $dcv_sm_cli_conf_file > /dev/null 2>&1
 [output]
 # The formatting style for command output.
 # output-format = json
@@ -1897,10 +1910,10 @@ no-verify-ssl = true
 auth-server-url = https://${broker_hostname}:${client_to_broker_port}/oauth2/token?grant_type=client_credentials
 
 # The client ID
-itwillbechangedtoclientid
+client-id = client-id
 
 # The client password
-itwillbechangedtoclientpass
+client-password = client-password
 
 [broker]
 # hostname or IP of the broker. This parameter is mandatory.
