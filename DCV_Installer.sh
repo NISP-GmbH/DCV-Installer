@@ -1841,14 +1841,14 @@ registerFirstApiClient()
     client_id=${output#*client-id: }
     client_id=${client_id%% client-password:*}
     client_pass=${output#*client-password: }
-    dcv_sm_cli_conf_file=$(find $HOME -iname dcvsmcli.conf)
+    dcv_sm_cli_conf_file=$(find $dcv_cli_path -iname dcvsmcli.conf)
     client_id=${client_id//$'\n'/}
     client_pass=${client_pass//$'\n'/}
 
     if [ -f $dcv_sm_cli_conf_file ]
     then
-        sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
-        sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
+        sudo sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
+        sudo sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
     fi
 }
 
