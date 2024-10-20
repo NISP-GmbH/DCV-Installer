@@ -14,6 +14,10 @@
 # deriving from the use or misuse of this information.
 ################################################################################
 
+service_setup_answerClear()
+{
+    service_setup_answer=""
+}
 
 checkLinuxDistro()
 {
@@ -110,6 +114,7 @@ EOF
 
 readTheServiceSetupAnswer()
 {
+    service_setup_answerClear
 	echo -e "If yes, please type \"${GREEN}yes${NC}\" without quotes. Everything else will not be understood as yes."
 	read service_setup_answer
 	service_setup_answer=$(echo $service_setup_answer | tr '[:upper:]' '[:lower:]')
@@ -393,14 +398,14 @@ askThePort()
 
 ubuntuImportKey()
 {
-    echo "Importing NICE-GPG-KEY..."
+    echo -n "Importing NICE-GPG-KEY..."
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null 2>&1
     sudo gpg --import NICE-GPG-KEY > /dev/null 2>&1
     return_gpg=$?
     rm -f NICE-GPG-KEY
     if [ $return_gpg -eq 0 ]
     then
-        echo "...done."
+        echo "done."
     else
         echo "Error: Failed to import NICE-GPG-KEY. Exiting..."
         exit 33
@@ -409,11 +414,12 @@ ubuntuImportKey()
 
 ubuntuSetupRequiredPackages()
 {
-    echo "Doing apt update..."
+    echo -n "Doing apt update..."
     sudo apt -qq update > /dev/null 2>&1
     export DEBIAN_FRONTEND=noninteractive
+    echo "done."
 
-    echo "Installing graphical interface..."
+    echo -n "Installing graphical interface..."
     case "${ubuntu_version}" in
         "18.04")
             sudo apt -qqy install tasksel > /dev/null 2>&1
@@ -422,20 +428,30 @@ ubuntuSetupRequiredPackages()
         "20.04")
             sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
             sudo apt -qqy install gdm3 > /dev/null 2>&1
-            echo "Doing apt upgrade..."
-            sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
         "22.04")
             sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
             sudo apt -qqy install gdm3 > /dev/null 2>&1
-            echo "Doing apt upgrade..."
-            sudo apt -qqy upgrade > /dev/null 2>&1
             ;;
     esac
 
+    echo "done."
+
+    case "${ubuntu_version}" in
+        "20.04")
+            echo -n "Doing apt upgrade..."
+                sudo apt -qqy upgrade > /dev/null 2>&1
+            ;;
+        "22.04")
+            echo -n "Doing apt upgrade..."
+                sudo apt -qqy upgrade > /dev/null 2>&1
+            ;;
+    esac
+    echo "done."
+
     if [ -f "$gdm3_file" ]
     then
-        echo "Disabling Wayland..."
+        echo -n "Disabling Wayland..."
         cp -a $gdm3_file ${gdm3_file}.backup_$(date +%Y%m%d)
         if grep -q "^WaylandEnable" "$gdm3_file"
         then
@@ -446,12 +462,14 @@ ubuntuSetupRequiredPackages()
     else
         echo "The file $gdm3_file does not exist."
     fi
+    echo "done."
 
-    echo "Restarting graphic services..."
+    echo -n "Restarting graphic services..."
     sudo systemctl restart gdm3 > /dev/null 2>&1
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
+    echo "done."
 }
 
 ubuntuSetupNiceDcvWithGpuPrepareBase()
@@ -751,11 +769,11 @@ EOF
 
 ubuntuSetupSessionManagerBroker()
 {
-    echo "Installing DCV Broker..."
     if [[ $nice_dcv_broker_install_answer != "yes" ]]   
     then
         return 0
     fi
+    echo "Installing DCV Broker..."
 
     genericSetupSessionManagerBroker
 
@@ -865,11 +883,12 @@ EOF
 
 ubuntuSetupSessionManagerAgent()
 { 
-    echo "Installing DCV Agent..."
     if [[ $nice_dcv_agent_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Agent..."
+
     case "${ubuntu_version}" in
         "18.04")
             dcv_agent="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
@@ -963,11 +982,11 @@ EOF
 
 ubuntuSetupSessionManagerGateway()
 {
-    echo "Installing DCV Gateway"
     if [[ $nice_dcv_gateway_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Gateway"
 
     genericSetupSessionManagerGateway
 
@@ -1060,12 +1079,13 @@ centosSetupNiceDcvWithGpuPrepareBase()
     sudo yum upgrade -y > /dev/null 2>&1
 
     # setup server GUI
-    echo "Installing graphical interface..."
+    echo -n "Installing graphical interface..."
     sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
     sudo yum install glx-utils -y > /dev/null 2>&1
+    echo "done."
 
     # prepare to setup nvidia driver
     sudo yum erase nvidia cuda
@@ -1441,13 +1461,14 @@ centosSetupNiceDcvWithoutGpu()
         fi
     fi
 	
-    echo "Installing graphical interface..."
+    echo -n "Installing graphical interface..."
 	sudo yum -y groupinstall 'Server with GUI' > /dev/null 2>&1
 	if [ $? -ne 0 ]
 	then
 		echo "Failed to setup the Server GUI. Aborting..."
 		exit 8
 	fi
+    echo "done."
 
 	sudo systemctl get-default > /dev/null 2>&1
 	sudo systemctl set-default graphical.target > /dev/null 2>&1
@@ -1558,12 +1579,12 @@ genericSetupSessionManagerBroker()
 
 centosSetupSessionManagerBroker()
 {
-    echo "Installing DCV Broker..."
     if [[ $nice_dcv_broker_install_answer != "yes" ]]
     then
         return 0
     fi
 
+    echo "Installing DCV Broker..."
     genericSetupSessionManagerBroker
 
     dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
@@ -1670,11 +1691,11 @@ genericSetupSessionManagerGateway()
 
 centosSetupSessionManagerGateway()
 {
-    echo "Installing DCV Gateway..."
     if [[ $nice_dcv_gateway_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Gateway..."
 
     genericSetupSessionManagerGateway
 
@@ -1739,11 +1760,11 @@ EOF
 
 centosSetupSessionManagerAgent()
 {
-    echo "Installing DCV Agent..."
     if [[ $nice_dcv_agent_install_answer != "yes" ]]
     then
         return 0
     fi
+    echo "Installing DCV Agent..."
 
     dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
     wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
@@ -1837,35 +1858,55 @@ registerFirstApiClient()
     echo -e " Working on the DCV SM CLI configuration ... "
     echo -e "#############################################${NC}"
     echo 
+    echo -n "Trying to register the api client... wait for a moment..."
     output=$(sudo dcv-session-manager-broker register-api-client --client-name EF)
+    echo "done."
+
     client_id=${output#*client-id: }
     client_id=${client_id%% client-password:*}
     client_pass=${output#*client-password: }
-    dcv_sm_cli_conf_file=$(find $dcv_cli_path -iname dcvsmcli.conf)
+
+    if [[ "${client_id}x" == "x" ]]
+    then
+        echo "Was not possible to register the client. Please try to manually execute:"
+        echo "sudo dcv-session-manager-broker register-api-client --client-name EF"
+        echo "And configure client-id and client-password into /opt/dcvsm-cli/.../conf/dcvsmcli.conf"
+        echo "Press enter to continue."
+        read pressenter
+    fi
+
+    cd ~
+    cd nice-dcv-session-manager-cli-*/
+    dcv_sm_cli_conf_file=$(find . -iname dcvsmcli.conf)
     client_id=${client_id//$'\n'/}
     client_pass=${client_pass//$'\n'/}
 
-    if [ -f $dcv_sm_cli_conf_file ]
+    if [ -n "$dcv_sm_cli_conf_file" ] && [ -f "$dcv_sm_cli_conf_file" ] && [ -s "$dcv_sm_cli_conf_file" ]
     then
-        sudo sed -i "s/^itwillbechangedtoclientid.*/client-id = $client_id/" $dcv_sm_cli_conf_file
-        sudo sed -i "s/^itwillbechangedtoclientpass.*/client-password = $client_pass/" $dcv_sm_cli_conf_file
+        sed -i "s/^client-id =.*/client-id = ${client_id}/" $dcv_sm_cli_conf_file
+        sed -i "s/^client-password =.*/client-password = ${client_pass}/" $dcv_sm_cli_conf_file
     fi
 }
 
 setupSessionManagerCli()
 {
+    if [[ "$nice_dcv_cli_install_answer" != "yes" ]]
+    then
+        return 0
+    fi
+
+    echo -n "Downloading and configuring DCV Session Manager Cli..."
     current_dir=$(pwd)
-    sudo mkdir -p $dcv_cli_path
-    cd $dcv_cli_path
-    sudo wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
+    cd ~
+    wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
-        sudo unzip nice-dcv-session-manager-cli.zip > /dev/null 2>&1
-        sudo rm -f nice-dcv-session-manager-cli.zip
+        unzip -o nice-dcv-session-manager-cli.zip > /dev/null 2>&1
+        rm -f nice-dcv-session-manager-cli.zip
         cd nice-dcv-session-manager-cli-*/
-    	sudo sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
-    	dcv_sm_cli_conf_file=$(find $dcv_cli_path -iname dcvsmcli.conf)
-    	cat << EOF | sudo tee $dcv_sm_cli_conf_file > /dev/null 2>&1
+    	sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
+    	dcv_sm_cli_conf_file=$(find . -iname dcvsmcli.conf)
+    	cat << EOF | tee $dcv_sm_cli_conf_file > /dev/null 2>&1
 [output]
 # The formatting style for command output.
 # output-format = json
@@ -1885,10 +1926,10 @@ no-verify-ssl = true
 auth-server-url = https://${broker_hostname}:${client_to_broker_port}/oauth2/token?grant_type=client_credentials
 
 # The client ID
-itwillbechangedtoclientid
+client-id = client-id
 
 # The client password
-itwillbechangedtoclientpass
+client-password = client-password
 
 [broker]
 # hostname or IP of the broker. This parameter is mandatory.
@@ -1898,6 +1939,7 @@ EOF
         echo "Failed to download the CLI installer. Aborting..."
     	exit 6
     fi
+    echo "done."
     cd "$current_dir"
 }
 
@@ -1973,7 +2015,7 @@ finishTheSetup()
 	echo "- Create a session using DCV SM CLI: ./dcvsm create-session --name sess1 --owner $USER --type Virtual"
 	echo "- Describe all sessions using DCV SM CLI: ./dcvsm describe-sessions"
 	echo "- Delete a session using DCV SM CLI: ./dcvsm delete-session --session-id 3715ea87-c0f0-490f-9f4c-8c24cc9a4d82 --owner $USER"
-	echo "- To change the CLI config, edit the file: $dcv_sm_cli_conf_file"
+	echo "- To change the CLI config, edit the file: conf/dcvsmcli.conf"
 	echo "- Show the registered DCV SM Agents: sudo dcv-session-manager-broker describe-agent-clients"
 	echo "- Register a DCV SM client: dcv-session-manager-broker register-api-client --client-name EF"
 	echo # "-------------------"
@@ -1999,7 +2041,7 @@ announceHowTheScriptWorks()
     echo
     echo -e "${GREEN}->${NC} In the next step we will offer an optional NICE DCV installation and configuration (with and without GPU support). The GPU support does not affect DCV Session Manager components. If you decide to install NICE DCV, at the end we will ask if you want to continue with the DCV Session Manager installation (Broker, Agent, GW and CLI). We added this additional step in case you need to just install NICE DCV."
     echo
-    echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV port. We will avoid to use ports already in use in your system. If you have a fresh install you typically can continue with default values."
+    echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV port. We will avoid to use ports already in use in your system. If you have a fresh install and is not an IT person, just continue with all default values."
     echo
     echo "Press enter to continue the setup or ctrl+c to cancel."
     read p
@@ -2064,7 +2106,6 @@ dcv_will_be_installed="false"
 dcv_gpu_support="false"
 dcv_gpu_type="none"
 dcv_cli_hostname="localhost"
-dcv_cli_path="/opt/dcvsm-cli/"
 dcv_broker_config_file="/etc/dcv-session-manager-broker/session-manager-broker.properties"
 dcv_gateway_config_file="/etc/dcv-connection-gateway/dcv-connection-gateway.conf"
 dcv_gateway_cert_gen="/usr/share/dcv-session-manager-broker/bin/gen-gateway-certificates.sh"
