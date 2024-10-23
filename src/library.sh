@@ -810,28 +810,19 @@ delete-session-duration-seconds = 3600
 
 client-to-broker-connector-https-port = $client_to_broker_port
 client-to-broker-connector-bind-host = 0.0.0.0
-#clienttobrokerkeystorefile
-#clienttobrokerkeypass
-#enabletlsclientauthgateway
-# enable-tls-client-auth-gateway = true
 # client-to-broker-connector-key-store-file = test_security/KeyStore.jks
 # client-to-broker-connector-key-store-pass = dcvsm1
 agent-to-broker-connector-https-port = $agent_to_broker_port
 agent-to-broker-connector-bind-host = 0.0.0.0
-#agenttobrokerkeystorefile
-#agenttobrokerkeypass
 # agent-to-broker-connector-key-store-file = test_security/KeyStore.jks
 # agent-to-broker-connector-key-store-pass = dcvsm1
 
 enable-gateway = false
-#gatewayhttpsport
-#gatewaybindhost
-#gatewaytobrokerkeystorefile
-#gatewaytobrokerkeypass
+# gateway-to-broker-connector-https-port = 8447
+# gateway-to-broker-connector-bind-host = 0.0.0.0
 # gateway-to-broker-connector-key-store-file = test_security/KeyStore.jks
 # gateway-to-broker-connector-key-store-pass = dcvsm1
-#gatewaytobrokertruststorefile
-#gatewaytobrokertrustpass
+# enable-tls-client-auth-gateway = true
 # gateway-to-broker-connector-trust-store-file = test_security/TrustStore.jks
 # gateway-to-broker-connector-trust-store-pass = dcvsm1
 
@@ -846,8 +837,6 @@ broker-to-broker-discovery-addresses = 127.0.0.1:47500
 # broker-to-broker-discovery-aws-region = us-east-1
 # broker-to-broker-discovery-aws-alb-target-group-arn = ...
 broker-to-broker-distributed-memory-max-size-mb = 4096
-#brokertobrokerkeystorefile
-#brokertobrokerstorepass
 # broker-to-broker-key-store-file = test_security/KeyStore.jks
 # broker-to-broker-key-store-pass = dcvsm1
 broker-to-broker-connection-login = dcvsm-user
