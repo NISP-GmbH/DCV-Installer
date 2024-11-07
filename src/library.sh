@@ -1089,11 +1089,20 @@ centosSetupNiceDcvWithGpuPrepareBase()
 
     # setup server GUI
     echo -n "Installing graphical interface..."
-    sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
+    if $amazon_distro_based
+    then
+        sudo yum install -y gdm gnome-session gnome-classic-session gnome-session-xsession > /dev/null 2>&1
+        sudo yum install -y xorg-x11-server-Xorg xorg-x11-fonts-Type1 xorg-x11-drivers > /dev/null 2>&1
+        sudo yum install -y gnome-terminal gnu-free-fonts-common gnu-free-mono-fonts gnu-free-sans-fonts gnu-free-serif-fonts > /dev/null 2>&1
+    else
+        sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
+    fi
+
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
     sudo yum install glx-utils -y > /dev/null 2>&1
+
     echo "done."
 
     # prepare to setup nvidia driver
