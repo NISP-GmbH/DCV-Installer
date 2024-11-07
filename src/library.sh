@@ -1166,7 +1166,9 @@ createDcvGatewaySsl()
 createDcvSsl()
 {
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost" > /dev/null 2>&1
-    sudo echo 'ca-file="/etc/dcv/cert.pem"  ' >> /etc/dcv/dcv.conf
+    cat <<EOF | sudo tee --append /etc/dcv/dcv.conf > /dev/null 2>&1
+ca-file="/etc/dcv/cert.pem"
+EOF
 }
 
 finishNiceDcvServerSetup()
