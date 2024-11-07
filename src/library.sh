@@ -1183,7 +1183,13 @@ centos9SpecificSettings()
 centosSetupNiceDcvServer()
 {
     echo "Installing DCV Server..."
-    dcv_server="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
+
+    if $amazon_distro_based
+    then
+        dcv_server=$aws_dcv_download_uri_server_amz2
+    else    
+        dcv_server="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
+    fi
 
     if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
     then
@@ -1194,11 +1200,19 @@ centosSetupNiceDcvServer()
 	wget -q --no-check-certificate $dcv_server > /dev/null 2>&1
 	if [ $? -eq 0 ]
 	then
-		tar zxf nice-dcv-*el${redhat_distro_based_version}*.tgz > /dev/null 2>&1
-		rm -f nice-dcv-*el${redhat_distro_based_version}*.tgz
+        if $amazon_distro_based
+        then
+            tar zxv nice-dcv-amzn2*.tgz
+            rm -rf nice-dcv-amzn2*.tgz
+        else
+		    tar zxf nice-dcv-*el${redhat_distro_based_version}*.tgz > /dev/null 2>&1
+		    rm -f nice-dcv-*el${redhat_distro_based_version}*.tgz
+        fi
+
 		cd nice-dcv-*x86_64
 
 		sudo yum -y install nice-dcv-server-*.el${redhat_distro_based_version}.x86_64.rpm nice-xdcv-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-web-viewer*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-gltest-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+
 		if [ $? -ne 0 ]
     	then
         	echo "Failed to setup the DCV Server. Aborting..."
@@ -1593,7 +1607,12 @@ centosSetupSessionManagerBroker()
     echo "Installing DCV Broker..."
     genericSetupSessionManagerBroker
 
-    dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
+    if $amazon_distro_based
+    then
+        dcv_broker=$aws_dcv_download_uri_broker_amz2
+    else
+        dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
+    fi
 
 	wget -q --no-check-certificate $dcv_broker > /dev/null 2>&1
 	
@@ -1704,9 +1723,13 @@ centosSetupSessionManagerGateway()
     echo "Installing DCV Gateway..."
 
     genericSetupSessionManagerGateway
-
-    dcv_gateway="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
-
+    
+    if $amazon_distro_based
+    then
+        dcv_gateway=$aws_dcv_download_uri_gateway_amz2
+    else
+        dcv_gateway="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
+    fi
 	wget -q --no-check-certificate $dcv_gateway > /dev/null 2>&1
 
     if [ $? -eq 0 ]
@@ -1772,7 +1795,13 @@ centosSetupSessionManagerAgent()
     fi
     echo "Installing DCV Agent..."
 
-    dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
+    if $amazon_distro_based
+    then
+        dcv_agent=$aws_dcv_download_uri_agent_amz2
+    else
+        dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
+    fi
+
     wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
 
     if [ $? -eq 0 ]
