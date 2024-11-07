@@ -7,6 +7,39 @@ checkLinuxDistro()
 {
     echo "If you know what you are doing, please use --force option to avoid our Linux Distro compatibility test."
 
+
+    if $setup_force
+    then
+        if command -v apt &>/dev/null
+        then
+            ubuntu_distro="true"
+            ubuntu_version=22.04
+            ubuntu_major_version=$(echo $ubuntu_version | cut -d '.' -f 1)
+            ubuntu_minor_version=$(echo $ubuntu_version | cut -d '.' -f 2)
+        elif command -v dnf &>/dev/null
+        then
+            redhat_distro_based="true"
+            redhat_distro_based_version=8
+        elif command -v yum &>/dev/null
+        then
+            redhat_distro_based="true"
+            redhat_distro_based_version=7
+        else
+            echo "No supported package manager found"
+            exit 1
+        fi
+        return 0
+    fi
+
+    if [ -f /etc/redhat-release ]
+    then
+        if cat /etc/redhat-release | egrep -iq "amazon linux 2"
+        then
+            amazon_distro_based="true"
+            amazon_distro_version="2"
+        fi
+    fi
+
     if [ -f /etc/redhat-release ]
     then
         release_info=$(cat /etc/redhat-release)
