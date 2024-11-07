@@ -37,6 +37,8 @@ checkLinuxDistro()
         then
             amazon_distro_based="true"
             amazon_distro_version="2"
+            redhat_distro_based="true"
+            redhat_distro_based_version="7"
         fi
     fi
 

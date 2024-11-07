@@ -48,8 +48,6 @@ main()
 
     if [[ "${amazon_distro_version}x"  != "x" ]]
     then
-        redhat_distro_based="true"
-        redhat_distro_based_version="7"
         centosImportKey
         centosSetupRequiredPackages
         askAboutServiceSetup "dcv"
