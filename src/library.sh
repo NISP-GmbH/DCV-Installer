@@ -1214,7 +1214,7 @@ centosSetupNiceDcvServer()
 	then
         if $amazon_distro_based
         then
-            tar zxv nice-dcv-amzn2*.tgz
+            tar zxf nice-dcv-amzn2*.tgz
             rm -rf nice-dcv-amzn2*.tgz
         else
 		    tar zxf nice-dcv-*el${redhat_distro_based_version}*.tgz > /dev/null 2>&1
