@@ -23,6 +23,42 @@ checkLinuxDistro()
 {
     echo "If you know what you are doing, please use --force option to avoid our Linux Distro compatibility test."
 
+
+    if $setup_force
+    then
+        if command -v apt &>/dev/null
+        then
+            ubuntu_distro="true"
+            ubuntu_version=22.04
+            ubuntu_major_version=$(echo $ubuntu_version | cut -d '.' -f 1)
+            ubuntu_minor_version=$(echo $ubuntu_version | cut -d '.' -f 2)
+        elif command -v dnf &>/dev/null
+        then
+            redhat_distro_based="true"
+            redhat_distro_based_version=8
+        elif command -v yum &>/dev/null
+        then
+            redhat_distro_based="true"
+            redhat_distro_based_version=7
+        else
+            echo "No supported package manager found"
+            exit 1
+        fi
+        return 0
+    fi
+
+    if [ -f /etc/redhat-release ]
+    then
+        if cat /etc/redhat-release | egrep -iq "amazon linux 2"
+        then
+            amazon_distro_based="true"
+            amazon_distro_version="2"
+            redhat_distro_based="true"
+            redhat_distro_based_version="7"
+            return 0
+        fi
+    fi
+
     if [ -f /etc/redhat-release ]
     then
         release_info=$(cat /etc/redhat-release)
@@ -1069,11 +1105,20 @@ centosSetupNiceDcvWithGpuPrepareBase()
 
     # setup server GUI
     echo -n "Installing graphical interface..."
-    sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
+    if $amazon_distro_based
+    then
+        sudo yum install -y gdm gnome-session gnome-classic-session gnome-session-xsession > /dev/null 2>&1
+        sudo yum install -y xorg-x11-server-Xorg xorg-x11-fonts-Type1 xorg-x11-drivers > /dev/null 2>&1
+        sudo yum install -y gnome-terminal gnu-free-fonts-common gnu-free-mono-fonts gnu-free-sans-fonts gnu-free-serif-fonts > /dev/null 2>&1
+    else
+        sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
+    fi
+
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
     sudo yum install glx-utils -y > /dev/null 2>&1
+
     echo "done."
 
     # prepare to setup nvidia driver
@@ -1137,7 +1182,9 @@ createDcvGatewaySsl()
 createDcvSsl()
 {
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost" > /dev/null 2>&1
-    sudo echo 'ca-file="/etc/dcv/cert.pem"  ' >> /etc/dcv/dcv.conf
+    cat <<EOF | sudo tee --append /etc/dcv/dcv.conf > /dev/null 2>&1
+ca-file="/etc/dcv/cert.pem"
+EOF
 }
 
 finishNiceDcvServerSetup()
@@ -1166,7 +1213,13 @@ centos9SpecificSettings()
 centosSetupNiceDcvServer()
 {
     echo "Installing DCV Server..."
-    dcv_server="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
+
+    if $amazon_distro_based
+    then
+        dcv_server=$aws_dcv_download_uri_server_amz2
+    else    
+        dcv_server="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
+    fi
 
     if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
     then
@@ -1177,11 +1230,19 @@ centosSetupNiceDcvServer()
 	wget -q --no-check-certificate $dcv_server > /dev/null 2>&1
 	if [ $? -eq 0 ]
 	then
-		tar zxf nice-dcv-*el${redhat_distro_based_version}*.tgz > /dev/null 2>&1
-		rm -f nice-dcv-*el${redhat_distro_based_version}*.tgz
+        if $amazon_distro_based
+        then
+            tar zxf nice-dcv-amzn2*.tgz
+            rm -rf nice-dcv-amzn2*.tgz
+        else
+		    tar zxf nice-dcv-*el${redhat_distro_based_version}*.tgz > /dev/null 2>&1
+		    rm -f nice-dcv-*el${redhat_distro_based_version}*.tgz
+        fi
+
 		cd nice-dcv-*x86_64
 
 		sudo yum -y install nice-dcv-server-*.el${redhat_distro_based_version}.x86_64.rpm nice-xdcv-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-web-viewer*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-gltest-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+
 		if [ $? -ne 0 ]
     	then
         	echo "Failed to setup the DCV Server. Aborting..."
@@ -1576,7 +1637,12 @@ centosSetupSessionManagerBroker()
     echo "Installing DCV Broker..."
     genericSetupSessionManagerBroker
 
-    dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
+    if $amazon_distro_based
+    then
+        dcv_broker=$aws_dcv_download_uri_broker_amz2
+    else
+        dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
+    fi
 
 	wget -q --no-check-certificate $dcv_broker > /dev/null 2>&1
 	
@@ -1687,9 +1753,13 @@ centosSetupSessionManagerGateway()
     echo "Installing DCV Gateway..."
 
     genericSetupSessionManagerGateway
-
-    dcv_gateway="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
-
+    
+    if $amazon_distro_based
+    then
+        dcv_gateway=$aws_dcv_download_uri_gateway_amz2
+    else
+        dcv_gateway="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
+    fi
 	wget -q --no-check-certificate $dcv_gateway > /dev/null 2>&1
 
     if [ $? -eq 0 ]
@@ -1755,7 +1825,13 @@ centosSetupSessionManagerAgent()
     fi
     echo "Installing DCV Agent..."
 
-    dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
+    if $amazon_distro_based
+    then
+        dcv_agent=$aws_dcv_download_uri_agent_amz2
+    else
+        dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
+    fi
+
     wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
 
     if [ $? -eq 0 ]
@@ -2047,28 +2123,34 @@ ubuntu_major_version=""
 ubuntu_minor_version=""
 redhat_distro_based="false"
 redhat_distro_based_version=""
+amazon_distro_based="false"
+amazon_distro_version=""
 gdm3_file="/etc/gdm3/custom.conf"
 aws_dcv_download_uri_server_el7="https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/Servers/nice-dcv-2023.1-17701-el7-x86_64.tgz"
 aws_dcv_download_uri_server_el8="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-el8-x86_64.tgz"
 aws_dcv_download_uri_server_el9="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-el9-x86_64.tgz"
+aws_dcv_download_uri_server_amz2="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-amzn2-x86_64.tgz"
 aws_dcv_download_uri_server_ubuntu2004="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-ubuntu2004-x86_64.tgz"
 aws_dcv_download_uri_server_ubuntu2204="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-ubuntu2204-x86_64.tgz"
 aws_dcv_download_uri_server_ubuntu2404="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-ubuntu2404-x86_64.tgz"
 aws_dcv_download_uri_broker_el7="https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/Servers/nice-dcv-2023.1-17701-el7-x86_64.tgz"
 aws_dcv_download_uri_broker_el8="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker-el8.noarch.rpm"
 aws_dcv_download_uri_broker_el9="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker-el9.noarch.rpm"
+aws_dcv_download_uri_broker_amz2="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker-el7.noarch.rpm"
 aws_dcv_download_uri_broker_ubuntu2004="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker_all.ubuntu2004.deb"
 aws_dcv_download_uri_broker_ubuntu2204="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker_all.ubuntu2204.deb"
 aws_dcv_download_uri_broker_ubuntu2404="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-broker_all.ubuntu2404.deb"
 aws_dcv_download_uri_agent_el7="https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/SessionManagerAgents/nice-dcv-session-manager-agent-2023.1.748-1.el7.x86_64.rpm"
 aws_dcv_download_uri_agent_el8="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el8.x86_64.rpm"
 aws_dcv_download_uri_agent_el9="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el9.x86_64.rpm"
+aws_dcv_download_uri_agent_amz2="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent-el7.x86_64.rpm"
 aws_dcv_download_uri_agent_ubuntu2004="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent_amd64.ubuntu2004.deb"
 aws_dcv_download_uri_agent_ubuntu2204="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent_amd64.ubuntu2204.deb"
 aws_dcv_download_uri_agent_ubuntu2404="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-agent_amd64.ubuntu2404.deb"
 aws_dcv_download_uri_gateway_el7="https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/Gateway/nice-dcv-connection-gateway-2023.1.710-1.el7.x86_64.rpm"
 aws_dcv_download_uri_gateway_el8="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway-el8.x86_64.rpm"
 aws_dcv_download_uri_gateway_el9="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway-el9.x86_64.rpm"
+aws_dcv_download_uri_gateway_amz2="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway-el7.x86_64.rpm"
 aws_dcv_download_uri_gateway_ubuntu2004="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway_amd64.ubuntu2004.deb"
 aws_dcv_download_uri_gateway_ubuntu2204="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway_amd64.ubuntu2204.deb"
 nice_dcv_server_install_answer="no"
@@ -2117,27 +2199,21 @@ main()
     original_dir=$(pwd)
     cd "$temp_dir"
 
+    for arg in "$@"
+    do
+        if [ "$arg" = "--force" ]
+        then
+            setup_force=true
+            break
+        fi
+    done
+
 	checkLinuxDistro
 	announceHowTheScriptWorks
 
-    if [[ "${ubuntu_version}x" == "x" ]]
+    setup_guardian_var="false"
+    if [[ "${ubuntu_version}x" != "x" ]]
     then
-        if [[ "${redhat_distro_based_version}x" == "x" ]]
-        then
-            echo "Is not possible to setup any package because the OS version was not found. Aborting..."
-            exit 7
-        else
-            centosImportKey
-            centosSetupRequiredPackages
-            askAboutServiceSetup "dcv"
-            installNiceDcvSetup
-            askAboutSessionManagerComponents
-		    centosSetupSessionManagerBroker
-            centosSetupSessionManagerAgent
-            centosSetupSessionManagerGateway
-            centosConfigureFirewall
-        fi
-    else
         ubuntuImportKey
         ubuntuSetupRequiredPackages
         askAboutServiceSetup "dcv"
@@ -2147,6 +2223,42 @@ main()
         ubuntuSetupSessionManagerAgent
         ubuntuSetupSessionManagerGateway
         ubuntuConfigureFirewall
+        setup_guardian_var="true"
+    fi
+
+    
+    if [[ "${redhat_distro_based_version}x" != "x" ]]
+    then
+        centosImportKey
+        centosSetupRequiredPackages
+        askAboutServiceSetup "dcv"
+        installNiceDcvSetup
+        askAboutSessionManagerComponents
+		centosSetupSessionManagerBroker
+        centosSetupSessionManagerAgent
+        centosSetupSessionManagerGateway
+        centosConfigureFirewall
+        setup_guardian_var="true"
+    fi
+
+    if [[ "${amazon_distro_version}x"  != "x" ]]
+    then
+        centosImportKey
+        centosSetupRequiredPackages
+        askAboutServiceSetup "dcv"
+        installNiceDcvSetup
+        askAboutSessionManagerComponents
+		centosSetupSessionManagerBroker
+        centosSetupSessionManagerAgent
+        centosSetupSessionManagerGateway
+        centosConfigureFirewall
+        setup_guardian_var="true"
+    fi
+
+    if ! $setup_guardian_var
+    then
+        exit 7
+        echo "Is not possible to setup any package because the OS version was not found. Aborting..."
     fi
 
 	# dcv session manager cli setup
