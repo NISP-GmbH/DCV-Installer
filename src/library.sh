@@ -1119,18 +1119,18 @@ EOF
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg > /dev/null 2>&1
     sudo rmmod nouveau > /dev/null 2>&1
 
-    if [ -f "$gdm3_file" ]
+    if [ -f "$gdm_file" ]
     then
         echo -n "Disabling Wayland..."
-        cp -a $gdm3_file ${gdm3_file}.backup_$(date +%Y%m%d)
-        if grep -q "^WaylandEnable" "$gdm3_file"
+        cp -a $gdm_file ${gdm_file}.backup_$(date +%Y%m%d)
+        if grep -q "^WaylandEnable" "$gdm_file"
         then
-            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm3_file"
+            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm_file"
         else
-            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm3_file"
+            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm_file"
         fi
     else
-        echo "The file $gdm3_file does not exist."
+        echo "The file $gdm_file does not exist."
     fi
     echo "done."
 }
