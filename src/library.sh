@@ -1118,6 +1118,21 @@ EOF
     echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null 2>&1
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg > /dev/null 2>&1
     sudo rmmod nouveau > /dev/null 2>&1
+
+    if [ -f "$gdm3_file" ]
+    then
+        echo -n "Disabling Wayland..."
+        cp -a $gdm3_file ${gdm3_file}.backup_$(date +%Y%m%d)
+        if grep -q "^WaylandEnable" "$gdm3_file"
+        then
+            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm3_file"
+        else
+            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm3_file"
+        fi
+    else
+        echo "The file $gdm3_file does not exist."
+    fi
+    echo "done."
 }
 
 centosSetupNvidiaDriver()
