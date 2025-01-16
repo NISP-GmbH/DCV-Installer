@@ -1135,18 +1135,18 @@ EOF
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg > /dev/null 2>&1
     sudo rmmod nouveau > /dev/null 2>&1
 
-    if [ -f "$gdm3_file" ]
+    if [ -f "$gdm_file" ]
     then
         echo -n "Disabling Wayland..."
-        cp -a $gdm3_file ${gdm3_file}.backup_$(date +%Y%m%d)
-        if grep -q "^WaylandEnable" "$gdm3_file"
+        cp -a $gdm_file ${gdm_file}.backup_$(date +%Y%m%d)
+        if grep -q "^WaylandEnable" "$gdm_file"
         then
-            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm3_file"
+            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm_file"
         else
-            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm3_file"
+            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm_file"
         fi
     else
-        echo "The file $gdm3_file does not exist."
+        echo "The file $gdm_file does not exist."
     fi
     echo "done."
 }
@@ -2141,6 +2141,7 @@ redhat_distro_based_version=""
 amazon_distro_based="false"
 amazon_distro_version=""
 gdm3_file="/etc/gdm3/custom.conf"
+gdm_file="/etc/gdm3/custom.conf"
 aws_dcv_download_uri_server_el7="https://d1uj6qtbmh3dt5.cloudfront.net/2023.1/Servers/nice-dcv-2023.1-17701-el7-x86_64.tgz"
 aws_dcv_download_uri_server_el8="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-el8-x86_64.tgz"
 aws_dcv_download_uri_server_el9="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-el9-x86_64.tgz"
