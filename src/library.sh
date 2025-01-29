@@ -1,3 +1,65 @@
+checkParameters()
+{
+    if echo $@ | egrep -iq "\-\-without-interaction"
+    then
+        without_interaction_parameter="true"
+    
+        if [[ ${without_interaction_parameter} == "true" ]]
+        then
+            for arg in "$@"
+            do
+                case $arg in
+                    --dcv_server_install=true)
+                    dcv_server_install="true"
+                    shift
+                    ;;
+                    --dcv_broker=true)
+                    dcv_broker="true"
+                    shift
+                    ;;
+                    --dcv_agent=true)
+                    dcv_agent="true"
+                    shift
+                    ;;
+                    --dcv_cli=true)
+                    dcv_cli="true"
+                    shift
+                    ;;
+                   --dcv_gateway=true)
+                    dcv_gateway="true"
+                    shift
+                    ;;
+                   --dcv_firewall=true)
+                    dcv_firewall="true"
+                    shift
+                    ;;
+                   --dcv_server_gpu_nvidia=true)
+                    dcv_gpu_support="true"
+                    dcv_server_gpu_nvidia="true"
+                    shift
+                    ;;
+                   --dcv_server_gpu_amd=true)
+                    dcv_gpu_support="true"
+                    dcv_server_gpu_amd="true"
+                    shift
+                    ;;
+                   --force)
+                    setup_force="true"
+                    shift
+                    ;;
+                esac
+            done
+        fi
+        
+        if ! ( $dcv_server_install || $dcv_broker || $dcv_agent || $dcv_cli || $dcv_gateway || $dcv_firewall )
+        then
+            echo "--without-interaction found, but no extra parameters were set. Exiting..."
+            exit 40
+        fi
+
+    fi
+}
+
 service_setup_answerClear()
 {
     service_setup_answer=""
@@ -134,9 +196,19 @@ EOF
 
 readTheServiceSetupAnswer()
 {
+    service_name=$1
     service_setup_answerClear
 	echo -e "If yes, please type \"${GREEN}yes${NC}\" without quotes. Everything else will not be understood as yes."
-	read service_setup_answer
+    if $without_interaction_parameter
+    then
+        if [[ ${!service_name} == "true" ]]
+        then
+            service_setup_answer="yes"
+            echo "yes"
+        fi
+    else
+	    read service_setup_answer
+    fi
 	service_setup_answer=$(echo $service_setup_answer | tr '[:upper:]' '[:lower:]')
 }
 
@@ -159,31 +231,31 @@ askAboutServiceSetup()
     then
 	        echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Agent${NC}?"
-		readTheServiceSetupAnswer
+		readTheServiceSetupAnswer "dcv_agent"
 		nice_dcv_agent_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "broker"
     then
 	        echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Broker${NC}?"
-		readTheServiceSetupAnswer
+		readTheServiceSetupAnswer "dcv_broker"
 		nice_dcv_broker_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "gateway"
     then
 	        echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV Connection Gateway${NC}?"
-		readTheServiceSetupAnswer
+		readTheServiceSetupAnswer "dcv_gateway"
 		nice_dcv_gateway_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "cli"
     then
 	        echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV SM CLI${NC}?"
-		readTheServiceSetupAnswer
+		readTheServiceSetupAnswer "dcv_cli"
 		nice_dcv_cli_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "firewall"
     then
 	        echo 
 		echo -e "Do you want to setup ${GREEN}firewalld and firewalld rules${NC}?"
-		readTheServiceSetupAnswer
+		readTheServiceSetupAnswer "dcv_firewall"
 		nice_dcv_firewall_install_answer=$service_setup_answer
 	else
 		echo "Service to setup unknown. Aborting..."
@@ -196,24 +268,24 @@ askAboutNiceDcvSetup()
 {
     echo 
     echo -e "Do you want to install ${GREEN}Nice DCV Server${NC}?"
-	readTheServiceSetupAnswer
+	readTheServiceSetupAnswer "dcv_server_install"
     if echo $service_setup_answer | egrep -iq "yes"
     then
         dcv_will_be_installed="true"
 	    askThePort "Nice DCV"
-        echo -e "Do you want to install ${GREEN}Nice DCV SERVER with GPU Support?${NC}?"
-	    readTheServiceSetupAnswer
+        echo -e "Do you want to install ${GREEN}Nice DCV SERVER with GPU Support?${NC}"
+	    readTheServiceSetupAnswer "dcv_gpu_support"
         if echo $service_setup_answer | egrep -iq "yes"
         then
             dcv_gpu_support="true"
-            echo -e "Do you want to install ${GREEN}Nice DCV with Nvidia Support?${NC}?"
-	        readTheServiceSetupAnswer
+            echo -e "Do you want to install ${GREEN}Nice DCV with Nvidia Support?${NC}"
+	        readTheServiceSetupAnswer "dcv_server_gpu_nvidia"
             if echo $service_setup_answer | egrep -iq "yes"
             then
                 dcv_gpu_type="nvidia"
             else
                 echo -e "Do you want to install ${GREEN}Nice DCV with AMD/Radeon Support?${NC}?"
-	            readTheServiceSetupAnswer
+	            readTheServiceSetupAnswer "dcv_server_gpu_amd"
                 if echo $service_setup_answer | egrep -iq "yes"
                 then
                     echo "Currently AMD driver is not supported by this script. Please send an e-mail to info@ni-sp.com if you are interested."
@@ -388,7 +460,14 @@ askThePort()
 		fi
 		echo -e "If ${ORANGE}yes${NC}, please enter the port number (greater than 1000 and lower than 65536.)"
 		echo -e "To use the ${GREEN}default${NC}, please just press enter."
-		read port_answer
+		
+        if ${without_interaction_parameter}
+        then
+            port_answer=""
+            echo "Default will be used."
+        else
+            read port_answer
+        fi
 
 		if [[ "${port_answer}x" != "x" ]]
 		then
@@ -401,7 +480,10 @@ askThePort()
 			if [[ "$port_used" == "0" ]]
 			then
 				echo -e "The port >>> ${GREEN}$port_tmp${NC} <<< WAS ACCEPTED as valid option. Press enter to continue."
-				read p
+                if ! ${without_interaction_parameter}
+                then
+				    read p
+                fi
 				port_bool="false"
 			else
 				echo -e "The port >>> ${RED}$port_tmp${NC} <<< WAS NOT ACCEPTED as valid option, because the port is in use by your system. The script will ask again. Press enter to continue."
@@ -418,14 +500,14 @@ askThePort()
 
 ubuntuImportKey()
 {
-    echo -n "Importing NICE-GPG-KEY..."
+    echo "Importing NICE-GPG-KEY..."
     wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null 2>&1
     sudo gpg --import NICE-GPG-KEY > /dev/null 2>&1
     return_gpg=$?
     rm -f NICE-GPG-KEY
     if [ $return_gpg -eq 0 ]
     then
-        echo "done."
+        echo " done."
     else
         echo "Error: Failed to import NICE-GPG-KEY. Exiting..."
         exit 33
@@ -439,18 +521,18 @@ ubuntuSetupRequiredPackages()
     export DEBIAN_FRONTEND=noninteractive
     echo "done."
 
-    echo -n "Installing graphical interface..."
+    echo -n "Installing graphical interface... if your server is slow, please wait for a moment..."
     case "${ubuntu_version}" in
         "18.04")
             sudo apt -qqy install tasksel > /dev/null 2>&1
-            sudo tasksel install ubuntu-desktop > /dev/null 2>&1
+            sudo tasksel install ubuntu-desktop
             ;;
         "20.04")
-            sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
+            sudo apt -y install ubuntu-desktop
             sudo apt -qqy install gdm3 > /dev/null 2>&1
             ;;
         "22.04")
-            sudo apt -qqy install ubuntu-desktop > /dev/null 2>&1
+            sudo apt -y install ubuntu-desktop
             sudo apt -qqy install gdm3 > /dev/null 2>&1
             ;;
     esac
@@ -460,11 +542,11 @@ ubuntuSetupRequiredPackages()
     case "${ubuntu_version}" in
         "20.04")
             echo -n "Doing apt upgrade..."
-                sudo apt -qqy upgrade > /dev/null 2>&1
+                sudo apt -y upgrade
             ;;
         "22.04")
             echo -n "Doing apt upgrade..."
-                sudo apt -qqy upgrade > /dev/null 2>&1
+                sudo apt -y upgrade
             ;;
     esac
     echo "done."
@@ -613,6 +695,7 @@ compileAndSetupRadeonTop()
 ubuntuSetupNiceDcvServer()
 {
     echo "Installing DCV Server..."
+    echo "0%"
     case "${ubuntu_version}" in
         "18.04")
             dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
@@ -637,16 +720,25 @@ ubuntuSetupNiceDcvServer()
     tar zxf nice-dcv-*ubun*.tgz > /dev/null 2>&1
     rm -f nice-dcv-*.tgz
     cd nice-dcv-*64
-
+    echo "10%"
     sudo apt -qqy install ./nice-dcv-server* > /dev/null 2>&1
+    echo "20%"
     sudo apt -qqy install ./nice-dcv-web-viewer* > /dev/null 2>&1
+    echo "30%"
     sudo usermod -aG video dcv > /dev/null 2>&1
+    echo "40%"
     sudo apt -qqy install ./nice-xdcv* > /dev/null 2>&1
+    echo "50%"
     sudo apt -qqy install ./nice-dcv-gl* > /dev/null 2>&1
+    echo "60%"
     sudo apt -qqy install ./nice-dcv-simple-external-authenticato* > /dev/null 2>&1
+    echo "70%"
     sudo apt -qqy install dkms > /dev/null 2>&1
+    echo "80%"
     sudo dcvusbdriverinstaller --quiet > /dev/null 2>&1
+    echo "90%"
     sudo apt -qqy install pulseaudio-utils > /dev/null 2>&1
+    echo "100%"
 
     rm -rf nice-dcv-*64
     createDcvSsl
@@ -1088,14 +1180,14 @@ centosSetupNiceDcvWithGpuPrepareBase()
     sudo yum upgrade -y > /dev/null 2>&1
 
     # setup server GUI
-    echo -n "Installing graphical interface..."
+    echo -n "Installing graphical interface... if your server is slow, please wait for a moment..."
     if $amazon_distro_based
     then
-        sudo yum install -y gdm gnome-session gnome-classic-session gnome-session-xsession > /dev/null 2>&1
-        sudo yum install -y xorg-x11-server-Xorg xorg-x11-fonts-Type1 xorg-x11-drivers > /dev/null 2>&1
-        sudo yum install -y gnome-terminal gnu-free-fonts-common gnu-free-mono-fonts gnu-free-sans-fonts gnu-free-serif-fonts > /dev/null 2>&1
+        sudo yum install -y gdm gnome-session gnome-classic-session gnome-session-xsession
+        sudo yum install -y xorg-x11-server-Xorg xorg-x11-fonts-Type1 xorg-x11-drivers
+        sudo yum install -y gnome-terminal gnu-free-fonts-common gnu-free-mono-fonts gnu-free-sans-fonts gnu-free-serif-fonts
     else
-        sudo yum groupinstall 'Server with GUI' -y > /dev/null 2>&1
+        sudo yum groupinstall -y 'Server with GUI'
     fi
 
     sudo systemctl get-default > /dev/null 2>&1
@@ -1180,6 +1272,7 @@ createDcvGatewaySsl()
 
 createDcvSsl()
 {
+    echo "Creating self-signed SSL cert.."
     sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost" > /dev/null 2>&1
     cat <<EOF | sudo tee --append /etc/dcv/dcv.conf > /dev/null 2>&1
 ca-file="/etc/dcv/cert.pem"
@@ -1189,9 +1282,12 @@ EOF
 finishNiceDcvServerSetup()
 {
 	echo "NICE DCV Server service was installed."
-    echo "You do not need the Session Manager components to have DCV Server working, but if you have a reason for that, this script will offer to setup those components."
-    echo "Please press enter to continue if you want to setup the Session Manager components or ctrl+c to stop here. Is safe to quit from here."
-    read p
+    if ! ${without_interaction_parameter}
+    then
+        echo "You do not need the Session Manager components to have DCV Server working, but if you have a reason for that, this script will offer to setup those components."
+        echo "Please press enter to continue if you want to setup the Session Manager components or ctrl+c to stop here. Is safe to quit from here."
+        read p
+    fi
 }
 
 centos7SpecificSettings()
@@ -1212,7 +1308,7 @@ centos9SpecificSettings()
 centosSetupNiceDcvServer()
 {
     echo "Installing DCV Server..."
-
+    echo "0%"
     if $amazon_distro_based
     then
         dcv_server=$aws_dcv_download_uri_server_amz2
@@ -1240,7 +1336,19 @@ centosSetupNiceDcvServer()
 
 		cd nice-dcv-*x86_64
 
-		sudo yum -y install nice-dcv-server-*.el${redhat_distro_based_version}.x86_64.rpm nice-xdcv-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-web-viewer*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-gltest-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-gl-*.el${redhat_distro_based_version}.x86_64.rpm nice-dcv-simple-external-authenticator-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+        echo "10%"
+		sudo yum -y install nice-dcv-server-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+        echo "30%"
+        sudo yum -y install nice-xdcv-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+        echo "40%"
+        sudo yum -y install nice-dcv-web-viewer*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+        echo "60%"
+        sudo yum -y install nice-dcv-gltest-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+        echo "70%"
+        sudo yum -y install nice-dcv-gl-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+        echo "90%"
+        sudo yum -y install nice-dcv-simple-external-authenticator-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
+        echo "100%"
 
 		if [ $? -ne 0 ]
     	then
@@ -1510,8 +1618,8 @@ centosSetupNiceDcvWithoutGpu()
         fi
     fi
 	
-    echo -n "Installing graphical interface..."
-	sudo yum -y groupinstall 'Server with GUI' > /dev/null 2>&1
+    echo -n "Installing graphical interface... if your server is slow, please wait for a moment..."
+	sudo yum -y groupinstall 'Server with GUI'
 	if [ $? -ne 0 ]
 	then
 		echo "Failed to setup the Server GUI. Aborting..."
@@ -1595,7 +1703,7 @@ centosImportKey()
 centosSetupRequiredPackages()
 {
     echo "Updating the system ..."
-	sudo yum -y update > /dev/null 2>&1
+	sudo yum -y update
 	if [ $? -ne 0 ]
     then
         echo "Failed to execute yum update. Aborting..."
@@ -1618,7 +1726,14 @@ genericSetupSessionManagerBroker()
 	echo -e "The script also needs the ${GREEN}hostname of Session Manager${NC}. You can specify the IP address or a valid hostname."
 	echo "Please type the hostname or the IP address and press enter."
 	echo -e "The default is to use ${GREEN}localhost${NC} so you can just type enter and the script will configure >>> ${GREEN}localhost${NC} <<< as the hostname."
-	read broker_hostname_tmp
+    
+    if ${without_interaction_parameter}
+    then
+        broker_hostname_tmp=""
+        echo "Using localhost..."
+    else
+	    read broker_hostname_tmp
+    fi
 
 	if [[ "${broker_hostname_tmp}x" != "x" ]]
 	then
@@ -2068,7 +2183,7 @@ centosConfigureFirewall()
 finishTheSetup()
 {
 	echo -e "${GREEN}###########################################################"
-	echo -e          "  The DCV Session Manager setup was finished successful!  "
+	echo -e          "  The DCV Installer script was finished successful!  "
 	echo -e          "###########################################################${NC}"
 	echo "You can find more background at https://www.ni-sp.com/support/dcv-session-manager-installation-broker-and-agent/"
 	echo "Here are some tips:"
@@ -2085,11 +2200,17 @@ finishTheSetup()
 	echo # "-------------------"
 	echo -e "${GREEN}Thank you very much for using the DCV Session Manager!${NC}"
 	echo 
-	echo -e "If you like we can now reboot the server. Enter ${ORANGE}yes${NC} to reboot or ctrl+c to exit."
-	read p
-	if [ "$p" == "yes" ] ; then
-	    sudo reboot
-	fi
+
+    if ! $without_interaction_parameter
+    then
+	    echo -e "If you like we can now reboot the server. Enter ${ORANGE}yes${NC} to reboot or ctrl+c to exit."
+	    read p
+
+	    if [ "$p" == "yes" ]
+        then
+	        sudo reboot
+	    fi
+    fi
 }
 
 announceHowTheScriptWorks()
@@ -2108,5 +2229,10 @@ announceHowTheScriptWorks()
     echo -e "${GREEN}->${NC} The script will also ask other information - e.g. the port to run the Session Manager Broker, the Session Manager Agent, the Gateway ports, NICE DCV port. We will avoid to use ports already in use in your system. If you have a fresh install and is not an IT person, just continue with all default values."
     echo
     echo "Press enter to continue the setup or ctrl+c to cancel."
-    read p
+    if $without_interaction_parameter
+    then
+        echo "Continuing..."
+    else
+        read p
+    fi
 }

@@ -33,6 +33,31 @@ or
 bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/NISP-GmbH/DCV-Installer/main/DCV_Installer.sh)
 ```
 
+## How to install DCV and DCV SM components without interaction
+
+You need to add "--without-interaction" parameter and add extra parameters.
+
+If you do not provide one of them, the default value will be false.
+
+To install just DCV Server:
+
+```bash
+bash DCV_Installer.sh --without-interaction --dcv_server_install=true
+```
+
+DCV Server with GPU acceleration:
+
+```bash
+bash DCV_Installer.sh --without-interaction --dcv_server_install=true --dcv_server_gpu_nvidia=true
+bash DCV_Installer.sh --without-interaction --dcv_server_install=true --dcv_server_gpu_amd=true
+```
+
+DCV Server with GPU acceleration and DCV Session Manager components:
+
+```bash
+bash DCV_Installer.sh --without-interaction --dcv_server_install=true --dcv_server_gpu_nvidia=true --dcv_broker=true --dcv_agent=true --dcv_cli=true --dcv_gateway=true --dcv_firewall=true
+``` 
+
 ## How to customize the DCV_Installer.sh
 
 If you need to customize anything, you can edit the following files:

@@ -1,20 +1,17 @@
+checkParameters $@
+
 main()
 {
     temp_dir=$(mktemp -d -t dcv_installer_XXXXXXXXXX)
     original_dir=$(pwd)
     cd "$temp_dir"
 
-    for arg in "$@"
-    do
-        if [ "$arg" = "--force" ]
-        then
-            setup_force=true
-            break
-        fi
-    done
-
 	checkLinuxDistro
-	announceHowTheScriptWorks
+
+    if ! $without_interaction_parameter
+    then
+    	announceHowTheScriptWorks
+    fi
 
     setup_guardian_var="false"
     if [[ "${ubuntu_version}x" != "x" ]]
