@@ -60,6 +60,26 @@ checkParameters()
     fi
 }
 
+disableWayland()
+{
+    for gdm_custom_config_file in $gdm3_file $gdm_file
+    do
+        if [ -f "$gdm_custom_config_file" ]
+        then
+            echo -n "Disabling Wayland..."
+            cp -a $gdm_custom_config_file ${gdm_custom_config_file}.backup_$(date +%Y%m%d)
+            if grep -q "^WaylandEnable" "$gdm_custom_config_file"
+            then
+                sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm_custom_config_file"
+            else
+                sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm_custom_config_file"
+            fi
+        else
+            echo "The file $gdm_custom_config_file does not exist."
+        fi
+    done
+}
+
 service_setup_answerClear()
 {
     service_setup_answer=""
@@ -539,6 +559,8 @@ ubuntuSetupRequiredPackages()
 
     echo "done."
 
+    disableWayland
+
     case "${ubuntu_version}" in
         "20.04")
             echo -n "Doing apt upgrade..."
@@ -549,21 +571,6 @@ ubuntuSetupRequiredPackages()
                 sudo apt -y upgrade
             ;;
     esac
-    echo "done."
-
-    if [ -f "$gdm3_file" ]
-    then
-        echo -n "Disabling Wayland..."
-        cp -a $gdm3_file ${gdm3_file}.backup_$(date +%Y%m%d)
-        if grep -q "^WaylandEnable" "$gdm3_file"
-        then
-            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm3_file"
-        else
-            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm3_file"
-        fi
-    else
-        echo "The file $gdm3_file does not exist."
-    fi
     echo "done."
 
     echo -n "Restarting graphic services..."
@@ -1190,6 +1197,8 @@ centosSetupNiceDcvWithGpuPrepareBase()
         sudo yum groupinstall -y 'Server with GUI'
     fi
 
+    disableWayland
+
     sudo systemctl get-default > /dev/null 2>&1
     sudo systemctl set-default graphical.target > /dev/null 2>&1
     sudo systemctl isolate graphical.target > /dev/null 2>&1
@@ -1211,19 +1220,6 @@ EOF
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg > /dev/null 2>&1
     sudo rmmod nouveau > /dev/null 2>&1
 
-    if [ -f "$gdm_file" ]
-    then
-        echo -n "Disabling Wayland..."
-        cp -a $gdm_file ${gdm_file}.backup_$(date +%Y%m%d)
-        if grep -q "^WaylandEnable" "$gdm_file"
-        then
-            sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm_file"
-        else
-            sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm_file"
-        fi
-    else
-        echo "The file $gdm_file does not exist."
-    fi
     echo "done."
 }
 
@@ -1626,6 +1622,8 @@ centosSetupNiceDcvWithoutGpu()
 		exit 8
 	fi
     echo "done."
+
+    disableWayland
 
 	sudo systemctl get-default > /dev/null 2>&1
 	sudo systemctl set-default graphical.target > /dev/null 2>&1
