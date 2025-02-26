@@ -555,6 +555,10 @@ ubuntuSetupRequiredPackages()
             sudo apt -y install ubuntu-desktop
             sudo apt -qqy install gdm3 > /dev/null 2>&1
             ;;
+        "24.04")
+            sudo apt -y install ubuntu-desktop
+            sudo apt -qqy install gdm3 > /dev/null 2>&1
+            ;;
     esac
 
     echo "done."
@@ -567,6 +571,10 @@ ubuntuSetupRequiredPackages()
                 sudo apt -y upgrade
             ;;
         "22.04")
+            echo -n "Doing apt upgrade..."
+                sudo apt -y upgrade
+            ;;
+        "24.04")
             echo -n "Doing apt upgrade..."
                 sudo apt -y upgrade
             ;;
@@ -714,7 +722,7 @@ ubuntuSetupNiceDcvServer()
             dcv_server=$aws_dcv_download_uri_server_ubuntu2204
             ;;
         "24.04")
-            dcv_server=$aws_dcv_download_uri_server_ubuntu2204
+            dcv_server=$aws_dcv_download_uri_server_ubuntu2404
             ;;
     esac
 
@@ -906,7 +914,7 @@ ubuntuSetupSessionManagerBroker()
         "22.04")
             dcv_broker=$aws_dcv_download_uri_broker_ubuntu2204
             ;;
-        "22.04")
+        "24.04")
             dcv_broker=$aws_dcv_download_uri_broker_ubuntu2404
             ;;
     esac
@@ -1110,7 +1118,7 @@ ubuntuSetupSessionManagerGateway()
             dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2204
             ;;
         "24.04")
-            echo "Warning: DCV Gateway is not available for Ubuntu 24.04!"
+            dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2404
             ;;
     esac
 

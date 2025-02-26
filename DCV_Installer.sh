@@ -571,6 +571,10 @@ ubuntuSetupRequiredPackages()
             sudo apt -y install ubuntu-desktop
             sudo apt -qqy install gdm3 > /dev/null 2>&1
             ;;
+        "24.04")
+            sudo apt -y install ubuntu-desktop
+            sudo apt -qqy install gdm3 > /dev/null 2>&1
+            ;;
     esac
 
     echo "done."
@@ -583,6 +587,10 @@ ubuntuSetupRequiredPackages()
                 sudo apt -y upgrade
             ;;
         "22.04")
+            echo -n "Doing apt upgrade..."
+                sudo apt -y upgrade
+            ;;
+        "24.04")
             echo -n "Doing apt upgrade..."
                 sudo apt -y upgrade
             ;;
@@ -730,7 +738,7 @@ ubuntuSetupNiceDcvServer()
             dcv_server=$aws_dcv_download_uri_server_ubuntu2204
             ;;
         "24.04")
-            dcv_server=$aws_dcv_download_uri_server_ubuntu2204
+            dcv_server=$aws_dcv_download_uri_server_ubuntu2404
             ;;
     esac
 
@@ -922,7 +930,7 @@ ubuntuSetupSessionManagerBroker()
         "22.04")
             dcv_broker=$aws_dcv_download_uri_broker_ubuntu2204
             ;;
-        "22.04")
+        "24.04")
             dcv_broker=$aws_dcv_download_uri_broker_ubuntu2404
             ;;
     esac
@@ -1126,7 +1134,7 @@ ubuntuSetupSessionManagerGateway()
             dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2204
             ;;
         "24.04")
-            echo "Warning: DCV Gateway is not available for Ubuntu 24.04!"
+            dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2404
             ;;
     esac
 
@@ -2302,6 +2310,7 @@ aws_dcv_download_uri_gateway_el9="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv
 aws_dcv_download_uri_gateway_amz2="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway-el7.x86_64.rpm"
 aws_dcv_download_uri_gateway_ubuntu2004="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway_amd64.ubuntu2004.deb"
 aws_dcv_download_uri_gateway_ubuntu2204="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway_amd64.ubuntu2204.deb"
+aws_dcv_download_uri_gateway_ubuntu2404="https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-connection-gateway_amd64.ubuntu2404.deb"
 nice_dcv_server_install_answer="no"
 nice_dcv_broker_install_answer="no"
 nice_dcv_agent_install_answer="no"
