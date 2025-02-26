@@ -581,10 +581,12 @@ ubuntuSetupRequiredPackages()
         "22.04")
             sudo apt-get -y install ubuntu-desktop
             sudo apt-get -qqy install gdm3
+            sudo apt-get -qqy install openjdk-11-jdk
             ;;
         "24.04")
             sudo apt-get -y install ubuntu-desktop
             sudo apt-get -qqy install gdm3
+            sudo apt-get -qqy install openjdk-11-jdk
             ;;
     esac
 
@@ -593,17 +595,9 @@ ubuntuSetupRequiredPackages()
     disableWayland
 
     case "${ubuntu_version}" in
-        "20.04")
+        "20.04"|"22.04"|"24.04")
             echo -n "Doing apt-get upgrade..."
-                sudo apt-get -y upgrade
-            ;;
-        "22.04")
-            echo -n "Doing apt-get upgrade..."
-                sudo apt-get -y upgrade
-            ;;
-        "24.04")
-            echo -n "Doing apt-get upgrade..."
-                sudo apt-get -y upgrade
+            sudo apt-get -y upgrade
             ;;
     esac
     echo "done."
@@ -1017,6 +1011,18 @@ enable-cloud-watch-metrics = false
 session-manager-working-path = /var/lib/dcvsmbroker
 EOF
 
+    case "${ubuntu_version}" in
+        "22.04"|"24.04")
+        sudo mkdir -p /etc/systemd/system/dcv-session-manager-broker.service.d
+        cat << EOF | sudo tee /etc/systemd/system/dcv-session-manager-broker.service.d/override.conf > /dev/null 2>&1
+[Service]
+Environment="JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+Environment="PATH=/usr/lib/jvm/java-11-openjdk-amd64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+EOF
+        ;;
+    esac
+
+    sudo systemctl daemon-reload
     sudo systemctl enable --now dcv-session-manager-broker > /dev/null
     sudo systemctl restart dcv-session-manager-broker > /dev/null
 }
