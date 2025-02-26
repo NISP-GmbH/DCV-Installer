@@ -711,20 +711,20 @@ ubuntuSetupNiceDcvServer()
 {
     case "${ubuntu_version}" in
         "18.04")
-            dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
+            dcv_server_pkg="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
             ;;
         "20.04")
-            dcv_server=$aws_dcv_download_uri_server_ubuntu2004
+            dcv_server_pkg=$aws_dcv_download_uri_server_ubuntu2004
             ;;
         "22.04")
-            dcv_server=$aws_dcv_download_uri_server_ubuntu2204
+            dcv_server_pkg=$aws_dcv_download_uri_server_ubuntu2204
             ;;
         "24.04")
-            dcv_server=$aws_dcv_download_uri_server_ubuntu2404
+            dcv_server_pkg=$aws_dcv_download_uri_server_ubuntu2404
             ;;
     esac
 
-    wget -q --no-check-certificate $dcv_server > /dev/null
+    wget -q --no-check-certificate $dcv_server_pkg > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
@@ -1310,18 +1310,18 @@ centosSetupNiceDcvServer()
 {
     if $amazon_distro_based
     then
-        dcv_server=$aws_dcv_download_uri_server_amz2
+        dcv_server_pkg=$aws_dcv_download_uri_server_amz2
     else    
-        dcv_server="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
+        dcv_server_pkg="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
     fi
 
-    if ! echo "$dcv_server" | egrep -iq "^https.*.tgz"
+    if ! echo "$dcv_server_pkg" | egrep -iq "^https.*.tgz"
     then
         echo "Failed to get the right dcv server tarball file to dowload and install. Aborting..."
         exit 22
     fi
 
-	wget -q --no-check-certificate $dcv_server > /dev/null
+	wget -q --no-check-certificate $dcv_server_pkg > /dev/null
 	if [ $? -eq 0 ]
 	then
         if $amazon_distro_based
@@ -1519,7 +1519,7 @@ EOF
         createDcvSsl
 		sudo systemctl enable --now dcvserver > /dev/null
 	else
-		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
+		echo "Failed to download the file >>> $dcv_server_pkg <<<. Aborting..."
 		exit 1
 	fi
 
