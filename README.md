@@ -3,7 +3,7 @@
 ## Supported Operating Systems
 
 - RedHat based Linux distros (RedHat, Centos, AlmaLinux, Rocky Linux etc); Versions: EL7, EL8 and EL9
-- Ubuntu based Linux distros; Versions: 18.04, 20.04 and 22.04
+- Ubuntu based Linux distros; Versions: 18.04, 20.04, 22.04 and 24.04
 
 ## Which services can be installed and configured
 
