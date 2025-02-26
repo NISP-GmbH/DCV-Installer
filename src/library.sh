@@ -737,7 +737,7 @@ ubuntuSetupNiceDcvServer()
     sudo apt-get -qqy install ./nice-dcv-server* > /dev/null
     echo "Installing DCV Web Viewer..."
     sudo apt-get -qqy install ./nice-dcv-web-viewer* > /dev/null
-    echo "Add user DCV to video group..."
+    echo "Add user >>> dcv <<< to video group..."
     sudo usermod -aG video dcv > /dev/null
     echo "Installing DCV Xdcv..."
     sudo apt-get -qqy install ./nice-xdcv* > /dev/null
