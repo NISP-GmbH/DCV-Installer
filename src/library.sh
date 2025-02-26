@@ -218,16 +218,38 @@ readTheServiceSetupAnswer()
 {
     service_name=$1
     service_setup_answerClear
-	echo -e "If yes, please type \"${GREEN}yes${NC}\" without quotes. Everything else will not be understood as yes."
     if $without_interaction_parameter
     then
         if [[ ${!service_name} == "true" ]]
         then
             service_setup_answer="yes"
-            echo "yes"
         fi
     else
+        if echo $service_name | egrep -iq "agent"
+        then
+		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Agent${NC}?"
+        elif echo $service_name | egrep -iq "broker"
+        then
+		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Broker${NC}?"
+        elif echo $service_name | egrep -iq "gateway"
+        then
+		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Gateway${NC}?"
+        elif echo $service_name | egrep -iq "cli"
+        then
+		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager CLI${NC}?"
+        elif echo $service_name | egrep -iq "firewall"
+        then
+		    echo -e "Do you want to install and setup ${GREEN}firewalld${NC}?"
+        else
+		    echo -e "Do you want to install and setup ${GREEN}DCV Server${NC}?"
+        fi
+
+	    echo -e "If yes, please type \"${GREEN}yes${NC}\" without quotes. Everything else will not be understood as yes."
 	    read service_setup_answer
+        if [[ "$service_setup_answer" == "yes" ]]
+        then
+            eval "$service_name = true"
+        fi
     fi
 	service_setup_answer=$(echo $service_setup_answer | tr '[:upper:]' '[:lower:]')
 }
@@ -249,39 +271,28 @@ askAboutServiceSetup()
         askAboutNiceDcvSetup
     elif echo $service_name | egrep -iq "agent"
     then
-	    echo 
-		echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Agent${NC}?"
 		readTheServiceSetupAnswer "dcv_agent"
 		nice_dcv_agent_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "broker"
     then
-	    echo 
-		echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Broker${NC}?"
 		readTheServiceSetupAnswer "dcv_broker"
 		nice_dcv_broker_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "gateway"
     then
-	    echo 
-		echo -e "Do you want to install and setup ${GREEN}DCV Connection Gateway${NC}?"
 		readTheServiceSetupAnswer "dcv_gateway"
 		nice_dcv_gateway_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "cli"
     then
-	    echo 
-		echo -e "Do you want to install and setup ${GREEN}DCV SM CLI${NC}?"
 		readTheServiceSetupAnswer "dcv_cli"
 		nice_dcv_cli_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "firewall"
     then
-	        echo 
-		echo -e "Do you want to setup ${GREEN}firewalld and firewalld rules${NC}?"
 		readTheServiceSetupAnswer "dcv_firewall"
 		nice_dcv_firewall_install_answer=$service_setup_answer
 	else
 		echo "Service to setup unknown. Aborting..."
 		exit 17
 	fi
-
 }
 
 askAboutNiceDcvSetup()
@@ -2185,19 +2196,19 @@ finishTheSetup()
 	echo -e "${GREEN}###########################################################"
 	echo -e          "  The DCV Installer script was finished successful!  "
 	echo -e          "###########################################################${NC}"
-	echo "You can find more background at https://www.ni-sp.com/support/dcv-session-manager-installation-broker-and-agent/"
-	echo "Here are some tips:"
-	echo "- In case installed DCV CLI is installed: cd nice-dcv-session-manager-cli-*"
-	echo "- Show the DCV CLI help: ./dcvsm -h"
-	# echo "- Show the DCV SM servers: ./dcvsm describe-servers "
-	echo "- Describe the servers using the DCV CLI: ./dcvsm describe-servers"
-	echo "- Create a session using DCV SM CLI: ./dcvsm create-session --name sess1 --owner $USER --type Virtual"
-	echo "- Describe all sessions using DCV SM CLI: ./dcvsm describe-sessions"
-	echo "- Delete a session using DCV SM CLI: ./dcvsm delete-session --session-id 3715ea87-c0f0-490f-9f4c-8c24cc9a4d82 --owner $USER"
-	echo "- To change the CLI config, edit the file: conf/dcvsmcli.conf"
-	echo "- Show the registered DCV SM Agents: sudo dcv-session-manager-broker describe-agent-clients"
-	echo "- Register a DCV SM client: dcv-session-manager-broker register-api-client --client-name EF"
-	echo # "-------------------"
+    if $dcv_cli
+    then
+	    echo "- In case installed DCV CLI is installed: cd nice-dcv-session-manager-cli-*"
+	    echo "- Show the DCV CLI help: ./dcvsm -h"
+	    echo "- Describe the servers using the DCV CLI: ./dcvsm describe-servers"
+	    echo "- Create a session using DCV SM CLI: ./dcvsm create-session --name sess1 --owner $USER --type Virtual"
+	    echo "- Describe all sessions using DCV SM CLI: ./dcvsm describe-sessions"
+	    echo "- Delete a session using DCV SM CLI: ./dcvsm delete-session --session-id 3715ea87-c0f0-490f-9f4c-8c24cc9a4d82 --owner $USER"
+	    echo "- To change the CLI config, edit the file: conf/dcvsmcli.conf"
+	    echo "- Show the registered DCV SM Agents: sudo dcv-session-manager-broker describe-agent-clients"
+	    echo "- Register a DCV SM client: dcv-session-manager-broker register-api-client --client-name EF"
+    fi
+	echo "------------------------------------------------------------------------------------------------------------"
 	echo -e "${GREEN}Thank you very much for using the DCV Session Manager!${NC}"
 	echo 
 
