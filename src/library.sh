@@ -92,7 +92,7 @@ checkLinuxDistro()
 
     if $setup_force
     then
-        if command -v apt &>/dev/null
+        if command -v apt-get &>/dev/null
         then
             ubuntu_distro="true"
             ubuntu_version=22.04
@@ -536,28 +536,28 @@ ubuntuImportKey()
 
 ubuntuSetupRequiredPackages()
 {
-    echo -n "Doing apt update..."
-    sudo apt -qq update > /dev/null
+    echo -n "Doing apt-get update..."
+    sudo apt-get -qq update > /dev/null
     export DEBIAN_FRONTEND=noninteractive
     echo "done."
 
     echo -n "Installing graphical interface... if your server is slow, please wait for a moment..."
     case "${ubuntu_version}" in
         "18.04")
-            sudo apt -qqy install tasksel
+            sudo apt-get -qqy install tasksel
             sudo tasksel install ubuntu-desktop
             ;;
         "20.04")
-            sudo apt -y install ubuntu-desktop
-            sudo apt -qqy install gdm3
+            sudo apt-get -y install ubuntu-desktop
+            sudo apt-get -qqy install gdm3
             ;;
         "22.04")
-            sudo apt -y install ubuntu-desktop
-            sudo apt -qqy install gdm3
+            sudo apt-get -y install ubuntu-desktop
+            sudo apt-get -qqy install gdm3
             ;;
         "24.04")
-            sudo apt -y install ubuntu-desktop
-            sudo apt -qqy install gdm3
+            sudo apt-get -y install ubuntu-desktop
+            sudo apt-get -qqy install gdm3
             ;;
     esac
 
@@ -567,16 +567,16 @@ ubuntuSetupRequiredPackages()
 
     case "${ubuntu_version}" in
         "20.04")
-            echo -n "Doing apt upgrade..."
-                sudo apt -y upgrade
+            echo -n "Doing apt-get upgrade..."
+                sudo apt-get -y upgrade
             ;;
         "22.04")
-            echo -n "Doing apt upgrade..."
-                sudo apt -y upgrade
+            echo -n "Doing apt-get upgrade..."
+                sudo apt-get -y upgrade
             ;;
         "24.04")
-            echo -n "Doing apt upgrade..."
-                sudo apt -y upgrade
+            echo -n "Doing apt-get upgrade..."
+                sudo apt-get -y upgrade
             ;;
     esac
     echo "done."
@@ -592,8 +592,8 @@ ubuntuSetupRequiredPackages()
 ubuntuSetupNiceDcvWithGpuPrepareBase()
 {
     echo "Installing dev tools..."
-    sudo apt install -qqy mesa-utils > /dev/null
-    sudo apt install -qqy gcc make linux-headers-$(uname -r) > /dev/null
+    sudo apt-get install -qqy mesa-utils > /dev/null
+    sudo apt-get install -qqy gcc make linux-headers-$(uname -r) > /dev/null
 
     echo "Blacklisting some kernel modules..."
     if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
@@ -632,11 +632,11 @@ ubuntuSetupNvidiaDriver()
 ubuntuSetupAmdDriver()
 {
     echo "Installing AMD driver..."
-    sudo apt -qqy install gcc make awscli bc sharutils > /dev/null
-    sudo apt -qqy install linux-modules-extra-$(uname -r) linux-firmware > /dev/null
+    sudo apt-get -qqy install gcc make awscli bc sharutils > /dev/null
+    sudo apt-get -qqy install linux-modules-extra-$(uname -r) linux-firmware > /dev/null
     if [ $ubuntu_major_version -eq 22 ]
     then
-        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext > /dev/null
+        sudo apt-get -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext > /dev/null
         cat << EOF | sudo tee --append /etc/X11/xorg.conf.d/20-amdgpu.conf > /dev/null 2>&1
 Section "Device"
     Identifier "AMD"
@@ -652,14 +652,14 @@ EOF
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 31
         fi
-        sudo apt -qqy install ./amdgpu-install* > /dev/null
-        sudo apt -qqy install amdgpu-dkms > /dev/null
+        sudo apt-get -qqy install ./amdgpu-install* > /dev/null
+        sudo apt-get -qqy install amdgpu-dkms > /dev/null
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
     fi
 
     if [ $ubuntu_major_version -eq 20 ]
     then
-        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettex > /dev/null
+        sudo apt-get -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettex > /dev/null
         cat <<EOF> /usr/share/X11/xorg.conf.d/20-amdgpu.conf
 Section "Device"
     Identifier "AMD"
@@ -675,8 +675,8 @@ EOF
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 32
         fi
-        sudo apt -qqy install ./amdgpu-install* > /dev/null
-        sudo apt -qqy install amdgpu-dkms > /dev/null
+        sudo apt-get -qqy install ./amdgpu-install* > /dev/null
+        sudo apt-get -qqy install amdgpu-dkms > /dev/null
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
 
     fi
@@ -734,23 +734,23 @@ ubuntuSetupNiceDcvServer()
     rm -f nice-dcv-*.tgz
     cd nice-dcv-*64
     echo "Installing DCV Server..."
-    sudo apt -qqy install ./nice-dcv-server* > /dev/null
+    sudo apt-get -qqy install ./nice-dcv-server* > /dev/null
     echo "Installing DCV Web Viewer..."
-    sudo apt -qqy install ./nice-dcv-web-viewer* > /dev/null
+    sudo apt-get -qqy install ./nice-dcv-web-viewer* > /dev/null
     echo "Add user DCV to video group..."
     sudo usermod -aG video dcv > /dev/null
     echo "Installing DCV Xdcv..."
-    sudo apt -qqy install ./nice-xdcv* > /dev/null
+    sudo apt-get -qqy install ./nice-xdcv* > /dev/null
     echo "Installing DCV DCV GL..."
-    sudo apt -qqy install ./nice-dcv-gl* > /dev/null
+    sudo apt-get -qqy install ./nice-dcv-gl* > /dev/null
     echo "Installing DCV DCV Simple external authentication..."
-    sudo apt -qqy install ./nice-dcv-simple-external-authenticat* > /dev/null
+    sudo apt-get -qqy install ./nice-dcv-simple-external-authenticat* > /dev/null
     echo "Installing DKMS..."
-    sudo apt -qqy install dkms > /dev/null
+    sudo apt-get -qqy install dkms > /dev/null
     echo "Executing dcvusbdriverinstaller..."
     sudo dcvusbdriverinstaller --quiet > /dev/null
     echo "Installing pulseaudio-utils..."
-    sudo apt -qqy install pulseaudio-utils > /dev/null
+    sudo apt-get -qqy install pulseaudio-utils > /dev/null
 
     rm -rf nice-dcv-*64
     createDcvSsl
@@ -841,7 +841,7 @@ ubuntuSetupNiceDcvWithoutGpu()
 
     ubuntuSetupNiceDcvServer
 
-    sudo apt -qqy install xserver-xorg-video-dummy > /dev/null
+    sudo apt-get -qqy install xserver-xorg-video-dummy > /dev/null
 
     echo "Configuring Xorg..."
 	if [ -f /etc/X11/xorg.conf  ] 
@@ -922,7 +922,7 @@ ubuntuSetupSessionManagerBroker()
         echo "Failed to download the right dcv broker package to setup the service. Aborting..."
         exit 26
     fi
-    sudo apt install -qqy ./nice-dcv-session-manager-broker*ubuntu*.deb > /dev/null
+    sudo apt-get install -qqy ./nice-dcv-session-manager-broker*ubuntu*.deb > /dev/null
     rm -f nice-dcv-session-manager-broker*ubuntu*.deb
 
     cat << EOF | sudo tee $dcv_broker_config_file > /dev/null 2>&1
@@ -1023,7 +1023,7 @@ ubuntuSetupSessionManagerAgent()
         echo "Failed to download the right dcv agent package to setup the service. Aborting..."
         exit 28
     fi
-    sudo apt install -qqy ./nice-dcv-session-manager-agent*.deb > /dev/null
+    sudo apt-get install -qqy ./nice-dcv-session-manager-agent*.deb > /dev/null
     rm -f ./nice-dcv-session-manager-agent*.deb
 
     if [ -f $broker_ssl_cert ]
@@ -1126,7 +1126,7 @@ ubuntuSetupSessionManagerGateway()
         exit 28
     fi
 
-    sudo apt install -qqy ./nice-dcv-connection-gateway*.deb > /dev/null
+    sudo apt-get install -qqy ./nice-dcv-connection-gateway*.deb > /dev/null
     rm -f ./nice-dcv-connection-gateway*.deb
 
     cat << EOF | sudo tee $dcv_gateway_config_file > /dev/null 2>&1
@@ -1179,7 +1179,7 @@ ubuntuConfigureFirewall()
     fi
 
     echo "Configuring the firewall..."
-    sudo apt -qqy install firewalld > /dev/null
+    sudo apt-get -qqy install firewalld > /dev/null
 
     setFirewalldRules
 	sudo iptables-save 
