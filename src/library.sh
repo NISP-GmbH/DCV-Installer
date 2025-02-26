@@ -741,9 +741,9 @@ ubuntuSetupNiceDcvServer()
     sudo usermod -aG video dcv > /dev/null
     echo "Installing DCV Xdcv..."
     sudo apt-get -qqy install ./nice-xdcv* > /dev/null
-    echo "Installing DCV DCV GL..."
+    echo "Installing DCV GL..."
     sudo apt-get -qqy install ./nice-dcv-gl* > /dev/null
-    echo "Installing DCV DCV Simple external authentication..."
+    echo "Installing DCV Simple external authentication..."
     sudo apt-get -qqy install ./nice-dcv-simple-external-authenticat* > /dev/null
     echo "Installing DKMS..."
     sudo apt-get -qqy install dkms > /dev/null
