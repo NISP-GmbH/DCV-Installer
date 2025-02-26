@@ -725,7 +725,6 @@ compileAndSetupRadeonTop()
 
 ubuntuSetupNiceDcvServer()
 {
-    echo "Installing DCV Server..."
     case "${ubuntu_version}" in
         "18.04")
             dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
@@ -1325,7 +1324,6 @@ centos9SpecificSettings()
 
 centosSetupNiceDcvServer()
 {
-    echo "Installing DCV Server..."
     if $amazon_distro_based
     then
         dcv_server=$aws_dcv_download_uri_server_amz2
