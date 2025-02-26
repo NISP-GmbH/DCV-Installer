@@ -569,6 +569,7 @@ ubuntuSetupRequiredPackages()
         "24.04")
             sudo apt-get -y install ubuntu-desktop
             sudo apt-get -qqy install gdm3
+            sudo apt-get -qqy install openjdk-11-jdk
             ;;
     esac
 
