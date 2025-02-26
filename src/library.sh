@@ -249,25 +249,25 @@ askAboutServiceSetup()
         askAboutNiceDcvSetup
     elif echo $service_name | egrep -iq "agent"
     then
-	        echo 
+	    echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Agent${NC}?"
 		readTheServiceSetupAnswer "dcv_agent"
 		nice_dcv_agent_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "broker"
     then
-	        echo 
+	    echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Broker${NC}?"
 		readTheServiceSetupAnswer "dcv_broker"
 		nice_dcv_broker_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "gateway"
     then
-	        echo 
+	    echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV Connection Gateway${NC}?"
 		readTheServiceSetupAnswer "dcv_gateway"
 		nice_dcv_gateway_install_answer=$service_setup_answer
     elif echo $service_name | egrep -iq "cli"
     then
-	        echo 
+	    echo 
 		echo -e "Do you want to install and setup ${GREEN}DCV SM CLI${NC}?"
 		readTheServiceSetupAnswer "dcv_cli"
 		nice_dcv_cli_install_answer=$service_setup_answer
@@ -521,8 +521,8 @@ askThePort()
 ubuntuImportKey()
 {
     echo "Importing NICE-GPG-KEY..."
-    wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null 2>&1
-    sudo gpg --import NICE-GPG-KEY > /dev/null 2>&1
+    wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null
+    sudo gpg --import NICE-GPG-KEY > /dev/null
     return_gpg=$?
     rm -f NICE-GPG-KEY
     if [ $return_gpg -eq 0 ]
@@ -537,27 +537,27 @@ ubuntuImportKey()
 ubuntuSetupRequiredPackages()
 {
     echo -n "Doing apt update..."
-    sudo apt -qq update > /dev/null 2>&1
+    sudo apt -qq update > /dev/null
     export DEBIAN_FRONTEND=noninteractive
     echo "done."
 
     echo -n "Installing graphical interface... if your server is slow, please wait for a moment..."
     case "${ubuntu_version}" in
         "18.04")
-            sudo apt -qqy install tasksel > /dev/null 2>&1
+            sudo apt -qqy install tasksel
             sudo tasksel install ubuntu-desktop
             ;;
         "20.04")
             sudo apt -y install ubuntu-desktop
-            sudo apt -qqy install gdm3 > /dev/null 2>&1
+            sudo apt -qqy install gdm3
             ;;
         "22.04")
             sudo apt -y install ubuntu-desktop
-            sudo apt -qqy install gdm3 > /dev/null 2>&1
+            sudo apt -qqy install gdm3
             ;;
         "24.04")
             sudo apt -y install ubuntu-desktop
-            sudo apt -qqy install gdm3 > /dev/null 2>&1
+            sudo apt -qqy install gdm3
             ;;
     esac
 
@@ -582,18 +582,18 @@ ubuntuSetupRequiredPackages()
     echo "done."
 
     echo -n "Restarting graphic services..."
-    sudo systemctl restart gdm3 > /dev/null 2>&1
-    sudo systemctl get-default > /dev/null 2>&1
-    sudo systemctl set-default graphical.target > /dev/null 2>&1
-    sudo systemctl isolate graphical.target > /dev/null 2>&1
+    sudo systemctl restart gdm3 > /dev/null
+    sudo systemctl get-default > /dev/null
+    sudo systemctl set-default graphical.target > /dev/null
+    sudo systemctl isolate graphical.target > /dev/null
     echo "done."
 }
 
 ubuntuSetupNiceDcvWithGpuPrepareBase()
 {
     echo "Installing dev tools..."
-    sudo apt install -qqy mesa-utils > /dev/null 2>&1
-    sudo apt install -qqy gcc make linux-headers-$(uname -r) > /dev/null 2>&1
+    sudo apt install -qqy mesa-utils > /dev/null
+    sudo apt install -qqy gcc make linux-headers-$(uname -r) > /dev/null
 
     echo "Blacklisting some kernel modules..."
     if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
@@ -610,7 +610,7 @@ EOF
     echo "Blocking nouveau in GRUB_CMDLINE_LINUX..."
     if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
     then  
-        echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null 2>&1
+        echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
         sudo update-grub
     fi
 }
@@ -618,7 +618,7 @@ EOF
 ubuntuSetupNvidiaDriver()
 {
     echo "Installing NVIDIA driver..."
-    wget -q --no-check-certificate $url_nvidia_tesla_driver > /dev/null 2>&1
+    wget -q --no-check-certificate $url_nvidia_tesla_driver > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to download the NVIDIA Driver. Aborting..."
@@ -632,11 +632,11 @@ ubuntuSetupNvidiaDriver()
 ubuntuSetupAmdDriver()
 {
     echo "Installing AMD driver..."
-    sudo apt -qqy install gcc make awscli bc sharutils > /dev/null 2>&1
-    sudo apt -qqy install linux-modules-extra-$(uname -r) linux-firmware > /dev/null 2>&1
+    sudo apt -qqy install gcc make awscli bc sharutils > /dev/null
+    sudo apt -qqy install linux-modules-extra-$(uname -r) linux-firmware > /dev/null
     if [ $ubuntu_major_version -eq 22 ]
     then
-        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext > /dev/null 2>&1
+        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettext > /dev/null
         cat << EOF | sudo tee --append /etc/X11/xorg.conf.d/20-amdgpu.conf > /dev/null 2>&1
 Section "Device"
     Identifier "AMD"
@@ -646,20 +646,20 @@ EOF
         cat << EOF | sudo tee --append /etc/modprobe.d/20-amdgpu.conf > /dev/null 2>&1
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
-        wget -q --no-check-certificate $url_amd_ubuntu_driver > /dev/null 2>&1
+        wget -q --no-check-certificate $url_amd_ubuntu_driver > /dev/null
         if [ $? -ne 0 ]
         then
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 31
         fi
-        sudo apt -qqy install ./amdgpu-install* > /dev/null 2>&1
-        sudo apt -qqy install amdgpu-dkms > /dev/null 2>&1
+        sudo apt -qqy install ./amdgpu-install* > /dev/null
+        sudo apt -qqy install amdgpu-dkms > /dev/null
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
     fi
 
     if [ $ubuntu_major_version -eq 20 ]
     then
-        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettex > /dev/null 2>&1t
+        sudo apt -qqy install libdrm-common libdrm-amdgpu1 libdrm2 libdrm-dev libdrm2-amdgpu pkg-config libncurses-dev libpciaccess0 libpciaccess-dev libxcb1 libxcb1-dev libxcb-dri3-0 libxcb-dri3-dev libxcb-dri2-0 libxcb-dri2-0-dev gettex > /dev/null
         cat <<EOF> /usr/share/X11/xorg.conf.d/20-amdgpu.conf
 Section "Device"
     Identifier "AMD"
@@ -669,14 +669,14 @@ EOF
         cat <<EOF> /etc/modprobe.d/20-amdgpu.conf
 options amdgpu virtual_display=0000:00:1e.0,2
 EOF
-        wget -q --no-check-certificate $url_amd_ubuntu_driver > /dev/null 2>&1
+        wget -q --no-check-certificate $url_amd_ubuntu_driver > /dev/null
         if [ $? -ne 0 ]
         then
             echo "Failed to download the Ubuntu AMD driver. Aborting..."
             exit 32
         fi
-        sudo apt -qqy install ./amdgpu-install* > /dev/null 2>&1
-        sudo apt -qqy install amdgpu-dkms > /dev/null 2>&1
+        sudo apt -qqy install ./amdgpu-install* > /dev/null
+        sudo apt -qqy install amdgpu-dkms > /dev/null
         sudo amdgpu-install -y --opencl=legacy,rocr --vulkan=amdvlk,pro --usecase=graphics --accept-eula
 
     fi
@@ -699,10 +699,10 @@ EOF
 compileAndSetupRadeonTop()
 {
     echo "Compiling and installing Radeon Top..."
-    git clone https://github.com/clbr/radeontop.git > /dev/null 2>&1
+    git clone https://github.com/clbr/radeontop.git > /dev/null
     cd radeontop
-    sudo make > /dev/null 2>&1
-    sudo make install > /dev/null 2>&1
+    sudo make > /dev/null
+    sudo make install > /dev/null
     cd ..
     sudo rm -rf radeontop
 }
@@ -710,7 +710,6 @@ compileAndSetupRadeonTop()
 ubuntuSetupNiceDcvServer()
 {
     echo "Installing DCV Server..."
-    echo "0%"
     case "${ubuntu_version}" in
         "18.04")
             dcv_server="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-2021.3-11591-ubuntu1804-x86_64.tgz"
@@ -726,34 +725,33 @@ ubuntuSetupNiceDcvServer()
             ;;
     esac
 
-    wget -q --no-check-certificate $dcv_server > /dev/null 2>&1
+    wget -q --no-check-certificate $dcv_server > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv server tarball to setup the service. Aborting..."
         exit 23
     fi 
-    tar zxf nice-dcv-*ubun*.tgz > /dev/null 2>&1
+    tar zxf nice-dcv-*ubun*.tgz > /dev/null
     rm -f nice-dcv-*.tgz
     cd nice-dcv-*64
-    echo "10%"
-    sudo apt -qqy install ./nice-dcv-server* > /dev/null 2>&1
-    echo "20%"
-    sudo apt -qqy install ./nice-dcv-web-viewer* > /dev/null 2>&1
-    echo "30%"
-    sudo usermod -aG video dcv > /dev/null 2>&1
-    echo "40%"
-    sudo apt -qqy install ./nice-xdcv* > /dev/null 2>&1
-    echo "50%"
-    sudo apt -qqy install ./nice-dcv-gl* > /dev/null 2>&1
-    echo "60%"
-    sudo apt -qqy install ./nice-dcv-simple-external-authenticato* > /dev/null 2>&1
-    echo "70%"
-    sudo apt -qqy install dkms > /dev/null 2>&1
-    echo "80%"
-    sudo dcvusbdriverinstaller --quiet > /dev/null 2>&1
-    echo "90%"
-    sudo apt -qqy install pulseaudio-utils > /dev/null 2>&1
-    echo "100%"
+    echo "Installing DCV Server..."
+    sudo apt -qqy install ./nice-dcv-server* > /dev/null
+    echo "Installing DCV Web Viewer..."
+    sudo apt -qqy install ./nice-dcv-web-viewer* > /dev/null
+    echo "Add user DCV to video group..."
+    sudo usermod -aG video dcv > /dev/null
+    echo "Installing DCV Xdcv..."
+    sudo apt -qqy install ./nice-xdcv* > /dev/null
+    echo "Installing DCV DCV GL..."
+    sudo apt -qqy install ./nice-dcv-gl* > /dev/null
+    echo "Installing DCV DCV Simple external authentication..."
+    sudo apt -qqy install ./nice-dcv-simple-external-authenticat* > /dev/null
+    echo "Installing DKMS..."
+    sudo apt -qqy install dkms > /dev/null
+    echo "Executing dcvusbdriverinstaller..."
+    sudo dcvusbdriverinstaller --quiet > /dev/null
+    echo "Installing pulseaudio-utils..."
+    sudo apt -qqy install pulseaudio-utils > /dev/null
 
     rm -rf nice-dcv-*64
     createDcvSsl
@@ -761,10 +759,10 @@ ubuntuSetupNiceDcvServer()
     sudo sed -ie 's/#owner = ""/owner = "ubuntu"/' /etc/dcv/dcv.conf
     sudo sed -ie 's/#create-session = true/create-session = true/' /etc/dcv/dcv.conf
     sudo sed -ie 's/"1"/"0"/g' /etc/apt/apt.conf.d/20auto-upgrades
-    sudo systemctl isolate multi-user.target > /dev/null 2>&1
-    sudo dcvgladmin enable > /dev/null 2>&1
-    sudo systemctl isolate graphical.target > /dev/null 2>&1
-    sudo systemctl enable --now dcvserver > /dev/null 2>&1
+    sudo systemctl isolate multi-user.target > /dev/null
+    sudo dcvgladmin enable > /dev/null
+    sudo systemctl isolate graphical.target > /dev/null
+    sudo systemctl enable --now dcvserver > /dev/null
 
     setFirewalldRules "dcvonly"
 }
@@ -844,7 +842,7 @@ ubuntuSetupNiceDcvWithoutGpu()
 
     ubuntuSetupNiceDcvServer
 
-    sudo apt -qqy install xserver-xorg-video-dummy > /dev/null 2>&1
+    sudo apt -qqy install xserver-xorg-video-dummy > /dev/null
 
     echo "Configuring Xorg..."
 	if [ -f /etc/X11/xorg.conf  ] 
@@ -888,9 +886,9 @@ Section "Screen"
 EndSection
 EOF
 
-    sudo systemctl get-default > /dev/null 2>&1
-    sudo systemctl set-default graphical.target > /dev/null 2>&1
-    sudo systemctl isolate graphical.target > /dev/null 2>&1
+    sudo systemctl get-default > /dev/null
+    sudo systemctl set-default graphical.target > /dev/null
+    sudo systemctl isolate graphical.target > /dev/null
     finishNiceDcvServerSetup
 }
 
@@ -906,26 +904,26 @@ ubuntuSetupSessionManagerBroker()
 
     case "${ubuntu_version}" in
         "18.04")
-            dcv_broker="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerBrokers/nice-dcv-session-manager-broker_2021.3.307-1_all.ubuntu1804.deb"
+            dcv_broker_pkg="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerBrokers/nice-dcv-session-manager-broker_2021.3.307-1_all.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_broker=$aws_dcv_download_uri_broker_ubuntu2004
+            dcv_broker_pkg=$aws_dcv_download_uri_broker_ubuntu2004
             ;;
         "22.04")
-            dcv_broker=$aws_dcv_download_uri_broker_ubuntu2204
+            dcv_broker_pkg=$aws_dcv_download_uri_broker_ubuntu2204
             ;;
         "24.04")
-            dcv_broker=$aws_dcv_download_uri_broker_ubuntu2404
+            dcv_broker_pkg=$aws_dcv_download_uri_broker_ubuntu2404
             ;;
     esac
 
-    wget -q --no-check-certificate $dcv_broker > /dev/null 2>&1
+    wget -q --no-check-certificate $dcv_broker_pkg > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv broker package to setup the service. Aborting..."
         exit 26
     fi
-    sudo apt install -qqy ./nice-dcv-session-manager-broker*ubuntu*.deb > /dev/null 2>&1
+    sudo apt install -qqy ./nice-dcv-session-manager-broker*ubuntu*.deb > /dev/null
     rm -f nice-dcv-session-manager-broker*ubuntu*.deb
 
     cat << EOF | sudo tee $dcv_broker_config_file > /dev/null 2>&1
@@ -993,8 +991,8 @@ enable-cloud-watch-metrics = false
 session-manager-working-path = /var/lib/dcvsmbroker
 EOF
 
-    sudo systemctl enable --now dcv-session-manager-broker > /dev/null 2>&1
-    sudo systemctl restart dcv-session-manager-broker > /dev/null 2>&1
+    sudo systemctl enable --now dcv-session-manager-broker > /dev/null
+    sudo systemctl restart dcv-session-manager-broker > /dev/null
 }
 
 ubuntuSetupSessionManagerAgent()
@@ -1007,26 +1005,26 @@ ubuntuSetupSessionManagerAgent()
 
     case "${ubuntu_version}" in
         "18.04")
-            dcv_agent="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
+            dcv_agent_pkg="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/SessionManagerAgents/nice-dcv-session-manager-agent_2021.3.453-1_amd64.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_agent=$aws_dcv_download_uri_agent_ubuntu2004
+            dcv_agent_pkg=$aws_dcv_download_uri_agent_ubuntu2004
             ;;
         "22.04")
-            dcv_agent=$aws_dcv_download_uri_agent_ubuntu2204
+            dcv_agent_pkg=$aws_dcv_download_uri_agent_ubuntu2204
             ;;
         "24.04")
-            dcv_agent=$aws_dcv_download_uri_agent_ubuntu2404
+            dcv_agent_pkg=$aws_dcv_download_uri_agent_ubuntu2404
             ;;
     esac
 
-    wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
+    wget -q --no-check-certificate $dcv_agent_pkg > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv agent package to setup the service. Aborting..."
         exit 28
     fi
-    sudo apt install -qqy ./nice-dcv-session-manager-agent*.deb > /dev/null 2>&1
+    sudo apt install -qqy ./nice-dcv-session-manager-agent*.deb > /dev/null
     rm -f ./nice-dcv-session-manager-agent*.deb
 
     if [ -f $broker_ssl_cert ]
@@ -1092,8 +1090,8 @@ EOF
     then
 	    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem	
     fi
-	sudo systemctl restart dcv-session-manager-broker > /dev/null 2>&1
-	sudo systemctl enable --now dcv-session-manager-agent > /dev/null 2>&1
+	sudo systemctl restart dcv-session-manager-broker > /dev/null
+	sudo systemctl enable --now dcv-session-manager-agent > /dev/null
 }
 
 ubuntuSetupSessionManagerGateway()
@@ -1109,27 +1107,27 @@ ubuntuSetupSessionManagerGateway()
     case "${ubuntu_version}" in
 
         "18.04")
-            dcv_gateway="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Gateway/nice-dcv-connection-gateway_2021.3.251-1_amd64.ubuntu1804.deb"
+            dcv_gateway_pkg="https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Gateway/nice-dcv-connection-gateway_2021.3.251-1_amd64.ubuntu1804.deb"
             ;;
         "20.04")
-            dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2004
+            dcv_gateway_pkg=$aws_dcv_download_uri_gateway_ubuntu2004
             ;;
         "22.04")
-            dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2204
+            dcv_gateway_pkg=$aws_dcv_download_uri_gateway_ubuntu2204
             ;;
         "24.04")
-            dcv_gateway=$aws_dcv_download_uri_gateway_ubuntu2404
+            dcv_gateway_pkg=$aws_dcv_download_uri_gateway_ubuntu2404
             ;;
     esac
 
-    wget -q --no-check-certificate $dcv_gateway > /dev/null 2>&1
+    wget -q --no-check-certificate $dcv_gateway_pkg > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to download the right dcv gateway package to setup the service. Aborting..."
         exit 28
     fi
 
-    sudo apt install -qqy ./nice-dcv-connection-gateway*.deb > /dev/null 2>&1
+    sudo apt install -qqy ./nice-dcv-connection-gateway*.deb > /dev/null
     rm -f ./nice-dcv-connection-gateway*.deb
 
     cat << EOF | sudo tee $dcv_gateway_config_file > /dev/null 2>&1
@@ -1160,18 +1158,18 @@ EOF
         fi
 
 
-        if ! id -u $dcv_gateway_user > /dev/null 2>&1
+        if ! id -u $dcv_gateway_user > /dev/null
         then
             useradd -r -g $dcv_gateway_user -s /sbin/nologin dcv
         fi
 
-        if ! getent group $dcv_gateway_group > /dev/null 2>&1
+        if ! getent group $dcv_gateway_group > /dev/null
         then
             groupadd $dcv_gateway_group
         fi
 
-        sudo systemctl enable --now dcv-connection-gateway > /dev/null 2>&1
-        sudo systemctl restart dcv-connection-gateway > /dev/null 2>&1
+        sudo systemctl enable --now dcv-connection-gateway > /dev/null
+        sudo systemctl restart dcv-connection-gateway > /dev/null
 }
 
 ubuntuConfigureFirewall()
@@ -1182,7 +1180,7 @@ ubuntuConfigureFirewall()
     fi
 
     echo "Configuring the firewall..."
-    sudo apt -qqy install firewalld > /dev/null 2>&1
+    sudo apt -qqy install firewalld > /dev/null
 
     setFirewalldRules
 	sudo iptables-save 
@@ -1192,7 +1190,7 @@ centosSetupNiceDcvWithGpuPrepareBase()
 {
     echo "Preparing CentOS..."
     echo "Doing yum upgrade..."
-    sudo yum upgrade -y > /dev/null 2>&1
+    sudo yum upgrade -y > /dev/null
 
     # setup server GUI
     echo -n "Installing graphical interface... if your server is slow, please wait for a moment..."
@@ -1207,16 +1205,16 @@ centosSetupNiceDcvWithGpuPrepareBase()
 
     disableWayland
 
-    sudo systemctl get-default > /dev/null 2>&1
-    sudo systemctl set-default graphical.target > /dev/null 2>&1
-    sudo systemctl isolate graphical.target > /dev/null 2>&1
-    sudo yum install glx-utils -y > /dev/null 2>&1
+    sudo systemctl get-default > /dev/null
+    sudo systemctl set-default graphical.target > /dev/null
+    sudo systemctl isolate graphical.target > /dev/null
+    sudo yum install glx-utils -y > /dev/null
 
     echo "done."
 
     # prepare to setup nvidia driver
     sudo yum erase nvidia cuda
-    sudo yum install -y make gcc kernel-devel-$(uname -r) wget > /dev/null 2>&1
+    sudo yum install -y make gcc kernel-devel-$(uname -r) wget > /dev/null
     cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf > /dev/null 2>&1
 blacklist vga16fb
 blacklist nouveau
@@ -1224,9 +1222,9 @@ blacklist rivafb
 blacklist nvidiafb
 blacklist rivatv
 EOF
-    echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null 2>&1
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg > /dev/null 2>&1
-    sudo rmmod nouveau > /dev/null 2>&1
+    echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg > /dev/null
+    sudo rmmod nouveau > /dev/null
 
     echo "done."
 }
@@ -1234,14 +1232,14 @@ EOF
 centosSetupNvidiaDriver()
 {
     echo "Installing NVIDIA driver..."
-    wget -q --no-check-certificate $url_nvidia_tesla_driver > /dev/null 2>&1
+    wget -q --no-check-certificate $url_nvidia_tesla_driver > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to download the NVIDIA driver. Aborting..."
         exit 29
     fi
-    sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s > /dev/null 2>&1
-    sudo nvidia-xconfig --preserve-busid --enable-all-gpus > /dev/null 2>&1
+    sudo /bin/sh ./NVIDIA-Linux-x86_64*.run -s > /dev/null
+    sudo nvidia-xconfig --preserve-busid --enable-all-gpus > /dev/null
     rm -f ./NVIDIA-Linux-x86_64*.run -s
 }
 
@@ -1266,7 +1264,7 @@ EOF
 
 createDcvGatewaySsl()
 {
-    sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $dcv_gateway_key -out $dcv_gateway_cert -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost" > /dev/null 2>&1
+    sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout $dcv_gateway_key -out $dcv_gateway_cert -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost" > /dev/null
     sudo chmod 600 $dcv_gateway_cert
     sudo chmod 600 $dcv_gateway_key
     sudo chown ${dcv_gateway_user}:${dcv_gateway_group} $dcv_gateway_cert
@@ -1277,7 +1275,7 @@ createDcvGatewaySsl()
 createDcvSsl()
 {
     echo "Creating self-signed SSL cert.."
-    sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost" > /dev/null 2>&1
+    sudo openssl req -x509 -newkey rsa:2048 -nodes -keyout /etc/dcv/key.pem -out /etc/dcv/cert.pem -days 3650 -subj "/C=US/ST=State/L=Locality/O=Organization/CN=localhost" > /dev/null
     cat <<EOF | sudo tee --append /etc/dcv/dcv.conf > /dev/null 2>&1
 ca-file="/etc/dcv/cert.pem"
 EOF
@@ -1312,7 +1310,6 @@ centos9SpecificSettings()
 centosSetupNiceDcvServer()
 {
     echo "Installing DCV Server..."
-    echo "0%"
     if $amazon_distro_based
     then
         dcv_server=$aws_dcv_download_uri_server_amz2
@@ -1326,7 +1323,7 @@ centosSetupNiceDcvServer()
         exit 22
     fi
 
-	wget -q --no-check-certificate $dcv_server > /dev/null 2>&1
+	wget -q --no-check-certificate $dcv_server > /dev/null
 	if [ $? -eq 0 ]
 	then
         if $amazon_distro_based
@@ -1334,33 +1331,32 @@ centosSetupNiceDcvServer()
             tar zxf nice-dcv-amzn2*.tgz
             rm -rf nice-dcv-amzn2*.tgz
         else
-		    tar zxf nice-dcv-*el${redhat_distro_based_version}*.tgz > /dev/null 2>&1
+		    tar zxf nice-dcv-*el${redhat_distro_based_version}*.tgz > /dev/null
 		    rm -f nice-dcv-*el${redhat_distro_based_version}*.tgz
         fi
 
 		cd nice-dcv-*x86_64
 
-        echo "10%"
-		sudo yum -y install nice-dcv-server-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
-        echo "30%"
-        sudo yum -y install nice-xdcv-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
-        echo "40%"
-        sudo yum -y install nice-dcv-web-viewer*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
-        echo "60%"
-        sudo yum -y install nice-dcv-gltest-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
-        echo "70%"
-        sudo yum -y install nice-dcv-gl-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
-        echo "90%"
-        sudo yum -y install nice-dcv-simple-external-authenticator-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null 2>&1
-        echo "100%"
+        echo "Installing DCV Server..."
+		sudo yum -y install nice-dcv-server-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null
+        echo "Installing DCV Xdcv..."
+        sudo yum -y install nice-xdcv-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null
+        echo "Installing DCV Web viewer..."
+        sudo yum -y install nice-dcv-web-viewer*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null
+        echo "Installing DCV GL-test..."
+        sudo yum -y install nice-dcv-gltest-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null
+        echo "Installing DCV GL..."
+        sudo yum -y install nice-dcv-gl-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null
+        echo "Installing DCV Simple external authenticator..."
+        sudo yum -y install nice-dcv-simple-external-authenticator-*.el${redhat_distro_based_version}.x86_64.rpm > /dev/null
 
 		if [ $? -ne 0 ]
     	then
         	echo "Failed to setup the DCV Server. Aborting..."
         	exit 10
     	fi
-		sudo systemctl isolate multi-user.target > /dev/null 2>&1
-		sudo systemctl isolate graphical.target > /dev/null 2>&1
+		sudo systemctl isolate multi-user.target > /dev/null
+		sudo systemctl isolate graphical.target > /dev/null
 
     cat <<EOF | sudo tee /etc/dcv/dcv.conf > /dev/null 2>&1
 ###############################################################################
@@ -1523,7 +1519,7 @@ primary-selection-copy=true
 EOF
 		cd
         createDcvSsl
-		sudo systemctl enable --now dcvserver > /dev/null 2>&1
+		sudo systemctl enable --now dcvserver > /dev/null
 	else
 		echo "Failed to download the file >>> $dcv_server <<<. Aborting..."
 		exit 1
@@ -1633,10 +1629,10 @@ centosSetupNiceDcvWithoutGpu()
 
     disableWayland
 
-	sudo systemctl get-default > /dev/null 2>&1
-	sudo systemctl set-default graphical.target > /dev/null 2>&1
-	sudo systemctl isolate graphical.target > /dev/null 2>&1
-	sudo yum -y install glx-utils xorg-x11-drv-dummy git > /dev/null 2>&1
+	sudo systemctl get-default > /dev/null
+	sudo systemctl set-default graphical.target > /dev/null
+	sudo systemctl isolate graphical.target > /dev/null
+	sudo yum -y install glx-utils xorg-x11-drv-dummy git > /dev/null
     if [ $? -ne 0 ]
     then
         echo "Failed to setup the basic packages for DCV without GPU. Aborting..."
@@ -1686,8 +1682,8 @@ EndSection
 EOF
 
     echo "Restarting graphical services..."
-	sudo systemctl isolate multi-user.target > /dev/null 2>&1
-	sudo systemctl isolate graphical.target > /dev/null 2>&1
+	sudo systemctl isolate multi-user.target > /dev/null
+	sudo systemctl isolate graphical.target > /dev/null
     centosSetupNiceDcvServer
     finishNiceDcvServerSetup
 }
@@ -1695,13 +1691,13 @@ EOF
 centosImportKey()
 {
     echo "Importing NICE-GPG-KEY..."
-    sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null 2>&1
+    sudo rpm --import https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY > /dev/null
     return_rpm=$?
     if [ $return_rpm -eq 0 ]
     then
         echo "...done!"
     else
-        echo "Error: Failed to improt NICE-GPG-KEY. Exiting..."
+        echo "Error: Failed to import NICE-GPG-KEY. Exiting..."
         exit 37
     fi
 }
@@ -1716,7 +1712,7 @@ centosSetupRequiredPackages()
         exit 11
     fi
 
-	sudo yum -y install vim rsync mtr net-tools lsof tar unzip > /dev/null 2>&1
+	sudo yum -y install vim rsync mtr net-tools lsof tar unzip > /dev/null
 	if [ $? -ne 0 ]
     then
         echo "Failed to setup the basic packages. Aborting..."
@@ -1759,16 +1755,16 @@ centosSetupSessionManagerBroker()
 
     if $amazon_distro_based
     then
-        dcv_broker=$aws_dcv_download_uri_broker_amz2
+        dcv_broker_pkg=$aws_dcv_download_uri_broker_amz2
     else
-        dcv_broker="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
+        dcv_broker_pkg="$(eval echo \${aws_dcv_download_uri_broker_el${redhat_distro_based_version}})"
     fi
 
-	wget -q --no-check-certificate $dcv_broker > /dev/null 2>&1
+	wget -q --no-check-certificate $dcv_broker_pkg > /dev/null
 	
     if [ $? -eq 0 ]
     then
-		sudo yum install -y nice-dcv-session-manager-broker-*.noarch.rpm > /dev/null 2>&1
+		sudo yum install -y nice-dcv-session-manager-broker-*.noarch.rpm > /dev/null
         rm -f nice-dcv-session-manager-broker*.rpm
 		if [ $? -ne 0 ]
     	then
@@ -1850,7 +1846,7 @@ enable-cloud-watch-metrics = false
 # cloud-watch-region = us-east-1
 session-manager-working-path = /var/lib/dcvsmbroker
 EOF
-		sudo systemctl enable --now dcv-session-manager-broker > /dev/null 2>&1
+		sudo systemctl enable --now dcv-session-manager-broker > /dev/null
 	else
 		echo "Failed to download the broker installer. Aborting..."
 		exit 4
@@ -1876,15 +1872,15 @@ centosSetupSessionManagerGateway()
     
     if $amazon_distro_based
     then
-        dcv_gateway=$aws_dcv_download_uri_gateway_amz2
+        dcv_gateway_pkg=$aws_dcv_download_uri_gateway_amz2
     else
-        dcv_gateway="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
+        dcv_gateway_pkg="$(eval echo \${aws_dcv_download_uri_gateway_el${redhat_distro_based_version}})"
     fi
-	wget -q --no-check-certificate $dcv_gateway > /dev/null 2>&1
+	wget -q --no-check-certificate $dcv_gateway_pkg > /dev/null
 
     if [ $? -eq 0 ]
     then
-		sudo yum install -y nice-dcv-connection-gateway*.rpm > /dev/null 2>&1
+		sudo yum install -y nice-dcv-connection-gateway*.rpm > /dev/null
         rm -f nice-dcv-connection-gateway*.rpm
 	    if [ $? -ne 0 ]
  	    then
@@ -1892,7 +1888,7 @@ centosSetupSessionManagerGateway()
 	        exit 15
 	    fi
 
-        cat << EOF | sudo tee $dcv_gateway_config_file > /dev/null 2>&1
+        cat << EOF | sudo tee $dcv_gateway_config_file > /dev/null
 [gateway]
 web-listen-endpoints = ["0.0.0.0:$gateway_web_port"]
 quic-listen-endpoints = ["0.0.0.0:$gateway_quic_port"]
@@ -1919,18 +1915,18 @@ EOF
             sudo chown ${dcv_gateway_user}:${dcv_gateway_user} $dcv_gateway_key
         fi
 
-        if ! id -u $dcv_gateway_user > /dev/null 2>&1
+        if ! id -u $dcv_gateway_user > /dev/null
         then 
             useradd -r -g $dcv_gateway_user -s /sbin/nologin dcv
         fi
 
-        if ! getent group $dcv_gateway_group > /dev/null 2>&1
+        if ! getent group $dcv_gateway_group > /dev/null
         then
             groupadd $dcv_gateway_group
         fi
 
-		sudo systemctl enable --now dcv-connection-gateway > /dev/null 2>&1
-		sudo systemctl restart dcv-connection-gateway > /dev/null 2>&1
+		sudo systemctl enable --now dcv-connection-gateway > /dev/null
+		sudo systemctl restart dcv-connection-gateway > /dev/null
 	else
 		echo "Failed to download the Gateway installer. Aborting..."
 		exit 7
@@ -1947,16 +1943,16 @@ centosSetupSessionManagerAgent()
 
     if $amazon_distro_based
     then
-        dcv_agent=$aws_dcv_download_uri_agent_amz2
+        dcv_agent_pkg=$aws_dcv_download_uri_agent_amz2
     else
-        dcv_agent="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
+        dcv_agent_pkg="$(eval echo \${aws_dcv_download_uri_agent_el${redhat_distro_based_version}})"
     fi
 
-    wget -q --no-check-certificate $dcv_agent > /dev/null 2>&1
+    wget -q --no-check-certificate $dcv_agent_pkg > /dev/null
 
     if [ $? -eq 0 ]
     then
-    	sudo yum install -y nice-dcv-session-manager-agent*.rpm > /dev/null 2>&1
+    	sudo yum install -y nice-dcv-session-manager-agent*.rpm > /dev/null
 
     	if [ $? -ne 0 ]
         then
@@ -2028,8 +2024,8 @@ EOF
         then
 		    sudo cp $broker_ssl_cert /etc/dcv-session-manager-agent/dcvsmbroker_ca.pem
         fi
-		sudo systemctl restart dcv-session-manager-broker > /dev/null 2>&1
-		sudo systemctl enable --now dcv-session-manager-agent > /dev/null 2>&1
+		sudo systemctl restart dcv-session-manager-broker > /dev/null
+		sudo systemctl enable --now dcv-session-manager-agent > /dev/null
 	else
 		echo "Failed to download the client installer. Aborting..."
 		exit 5
@@ -2083,10 +2079,10 @@ setupSessionManagerCli()
     echo -n "Downloading and configuring DCV Session Manager Cli..."
     current_dir=$(pwd)
     cd ~
-    wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null 2>&1
+    wget -q --no-check-certificate https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-session-manager-cli.zip > /dev/null
     if [ $? -eq 0 ]
     then
-        unzip -o nice-dcv-session-manager-cli.zip > /dev/null 2>&1
+        unzip -o nice-dcv-session-manager-cli.zip > /dev/null
         rm -f nice-dcv-session-manager-cli.zip
         cd nice-dcv-session-manager-cli-*/
     	sed -ie 's~/usr/bin/env python$~/usr/bin/env python3~' dcvsm   # replace the python with the python3 binary
@@ -2136,8 +2132,8 @@ setFirewalldRules()
     then
     	if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
     	then
-    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/tcp --permanent > /dev/null 2>&1
-    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/udp --permanent > /dev/null 2>&1
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/tcp --permanent > /dev/null
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/udp --permanent > /dev/null
     	fi
     fi
 
@@ -2147,30 +2143,30 @@ setFirewalldRules()
 	    # nice dcv server port
     	if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
     	then
-    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/tcp --permanent > /dev/null 2>&1
-    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/udp --permanent > /dev/null 2>&1
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/tcp --permanent > /dev/null
+    		sudo firewall-cmd --zone=public --add-port=${dcv_port}/udp --permanent > /dev/null
     	fi
 
     	# agent to broker port
     	if [ -f /etc/systemd/system/multi-user.target.wants/dcv-session-manager-agent.service ]
     	then
-    		sudo firewall-cmd --zone=public --add-port=${agent_to_broker_port}/tcp --permanent > /dev/null 2>&1
+    		sudo firewall-cmd --zone=public --add-port=${agent_to_broker_port}/tcp --permanent > /dev/null
     	fi
 
     	# client to broker port
     	if [ -f /etc/systemd/system/multi-user.target.wants/dcv-session-manager-broker.service ]
     	then
-    		sudo firewall-cmd --zone=public --add-port=${client_to_broker_port}/tcp --permanent > /dev/null 2>&1
+    		sudo firewall-cmd --zone=public --add-port=${client_to_broker_port}/tcp --permanent > /dev/null
     	fi
  
     	# gateway to broker
     	if [ -f $dcv_gateway_config_file ]
     	then
-    		sudo firewall-cmd --zone=public --add-port=${gateway_to_broker_port}/tcp --permanent > /dev/null 2>&1
+    		sudo firewall-cmd --zone=public --add-port=${gateway_to_broker_port}/tcp --permanent > /dev/null
     	fi
     fi
 
-    sudo firewall-cmd --reload > /dev/null 2>&1
+    sudo firewall-cmd --reload > /dev/null
     sudo iptables-save 
 }
 
@@ -2180,8 +2176,8 @@ centosConfigureFirewall()
     then
         return 0
     fi
-	sudo yum -y install firewalld > /dev/null 2>&1
-	sudo iptables-save > /dev/null 2>&1
+	sudo yum -y install firewalld > /dev/null
+	sudo iptables-save > /dev/null
 
     setFirewalldRules
 }
