@@ -67,12 +67,12 @@ disableWayland()
         if [ -f "$gdm_custom_config_file" ]
         then
             echo -n "Disabling Wayland..."
-            cp -a $gdm_custom_config_file ${gdm_custom_config_file}.backup_$(date +%Y%m%d)
+            sudo cp -a $gdm_custom_config_file ${gdm_custom_config_file}.backup_$(date +%Y%m%d)
             if grep -q "^WaylandEnable" "$gdm_custom_config_file"
             then
-                sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm_custom_config_file"
+                sudo sed -i 's/^WaylandEnable.*/WaylandEnable=false/' "$gdm_custom_config_file"
             else
-                sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm_custom_config_file"
+                sudo sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm_custom_config_file"
             fi
         else
             echo "The file $gdm_custom_config_file does not exist."
