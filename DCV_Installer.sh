@@ -1075,7 +1075,9 @@ version = '0.1'
 
 # The port of the broker. Default: 8445
 broker_port = $agent_to_broker_port
-broker_host = "$broker_hostname"         # it could be the case that you need to remove the previous broker_host config to active this one
+
+#  Make sure to add the brokers hostname between single quotes
+broker_host = "$broker_hostname"
 
 # CA used to validate the certificate of the broker.
 # ca_file = 'ca-cert.pem'
