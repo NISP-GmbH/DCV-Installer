@@ -1,6 +1,6 @@
 #!/bin/bash
 ################################################################################
-# Copyright (C) 2019-2024 NI SP GmbH
+# Copyright (C) 2019-2026 NI SP GmbH
 # All Rights Reserved
 #
 # info@ni-sp.com / www.ni-sp.com
@@ -82,11 +82,14 @@ checkParameters()
 
 disableWayland()
 {
+    # GDM stores its config at /etc/gdm3/custom.conf on Debian/Ubuntu and at
+    # /etc/gdm/custom.conf on RHEL-based distros. Handle whichever exists.
+    wayland_disabled="false"
     for gdm_custom_config_file in $gdm3_file $gdm_file
     do
         if [ -f "$gdm_custom_config_file" ]
         then
-            echo -n "Disabling Wayland..."
+            echo -n "Disabling Wayland in $gdm_custom_config_file..."
             sudo cp -a $gdm_custom_config_file ${gdm_custom_config_file}.backup_$(date +%Y%m%d)
             if grep -q "^WaylandEnable" "$gdm_custom_config_file"
             then
@@ -94,15 +97,102 @@ disableWayland()
             else
                 sudo sed -i '/^\[daemon\]/a WaylandEnable=false' "$gdm_custom_config_file"
             fi
-        else
-            echo "The file $gdm_custom_config_file does not exist."
+            echo " done."
+            wayland_disabled="true"
         fi
     done
+
+    if ! $wayland_disabled
+    then
+        echo "No GDM custom.conf found ($gdm3_file or $gdm_file) - nothing to disable."
+    fi
 }
 
 service_setup_answerClear()
 {
     service_setup_answer=""
+}
+
+commandExists()
+{
+    # True if $1 is an executable available on PATH.
+    command -v "$1" > /dev/null 2>&1
+}
+
+dcvServerServiceRunning()
+{
+    # True if the dcvserver systemd service is currently active.
+    commandExists systemctl || return 1
+    systemctl is-active --quiet dcvserver 2>/dev/null
+}
+
+listInstalledDcvPackages()
+{
+    # Fills the global DCV_PKGS array with installed NICE DCV package names
+    # (dpkg on Debian/Ubuntu, rpm on RHEL-based).
+    DCV_PKGS=()
+    local p
+    if commandExists dpkg
+    then
+        while IFS= read -r p
+        do
+            [[ -n "$p" ]] && DCV_PKGS+=("$p")
+        done < <(dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' 2>/dev/null | awk '/^ii/{print $2}' | grep -iE 'nice-dcv|nice-xdcv')
+    elif commandExists rpm
+    then
+        while IFS= read -r p
+        do
+            [[ -n "$p" ]] && DCV_PKGS+=("$p")
+        done < <(rpm -qa 2>/dev/null | grep -iE 'nice-dcv|nice-xdcv')
+    fi
+}
+
+pkgServiceUnits()
+{
+    # Echoes the systemd unit (service/timer) basenames shipped by package $1.
+    local pkg="$1"
+    if commandExists dpkg
+    then
+        dpkg -L "$pkg" 2>/dev/null | grep -E '/systemd/.*\.(service|timer)$' | xargs -r -n1 basename 2>/dev/null
+    elif commandExists rpm
+    then
+        rpm -ql "$pkg" 2>/dev/null | grep -E '/systemd/.*\.(service|timer)$' | xargs -r -n1 basename 2>/dev/null
+    fi
+}
+
+uninstallOnePackage()
+{
+    # Stops+disables the services owned by $1, then removes the package.
+    local pkg="$1" unit
+    echo "Stopping services for ${pkg}..."
+    for unit in $(pkgServiceUnits "$pkg")
+    do
+        echo "  - stopping ${unit}"
+        sudo systemctl stop "$unit" > /dev/null 2>&1
+        sudo systemctl disable "$unit" > /dev/null 2>&1
+    done
+    echo "Removing package ${pkg}..."
+    if commandExists apt-get
+    then
+        sudo apt-get -y remove "$pkg" > /dev/null 2>&1
+    elif commandExists dnf
+    then
+        sudo dnf -y remove "$pkg" > /dev/null 2>&1
+    elif commandExists yum
+    then
+        sudo yum -y remove "$pkg" > /dev/null 2>&1
+    fi
+    echo "  done."
+}
+
+markUnsupported()
+{
+    # Record an unsupported / undetectable distro instead of exiting, so main()
+    # can present the "force install anyway?" screen. $1 = detected label,
+    # $2 = human-readable supported list.
+    distro_supported="false"
+    detected_distro_label="$1"
+    detected_supported_list="$2"
 }
 
 checkLinuxDistro()
@@ -153,9 +243,8 @@ checkLinuxDistro()
                     return 0
                     ;;
                 *)
-                    echo "Your Ubuntu version >>> $ubuntu_version <<< is not officially supported."
-                    echo "Supported versions: ${ubuntu_supported_versions}"
-                    exit 20
+                    markUnsupported "Ubuntu $ubuntu_version" "Ubuntu ${ubuntu_supported_versions}"
+                    return 0
                     ;;
             esac
         fi
@@ -175,9 +264,8 @@ checkLinuxDistro()
                     return 0
                     ;;
                 *)
-                    echo "Your RHEL-based Linux version (EL$redhat_distro_based_version) is not supported."
-                    echo "Supported versions: ${redhat_supported_versions}"
-                    exit 18
+                    markUnsupported "RHEL-based EL$redhat_distro_based_version" "${redhat_supported_versions}"
+                    return 0
                     ;;
             esac
         fi
@@ -200,8 +288,8 @@ checkLinuxDistro()
                 echo "Detected Amazon Linux 2023"
                 return 0
             else
-                echo "Amazon Linux version $VERSION_ID is not supported"
-                exit 19
+                markUnsupported "Amazon Linux $VERSION_ID" "Amazon Linux 2 and 2023"
+                return 0
             fi
         fi
     fi
@@ -241,9 +329,8 @@ checkLinuxDistro()
                     return 0
                     ;;
                 *)
-                    echo "Your RedHat-based Linux version (EL$redhat_distro_based_version) is not supported."
-                    echo "Release info: $release_info"
-                    exit 18
+                    markUnsupported "RHEL-based EL$redhat_distro_based_version ($release_info)" "${redhat_supported_versions}"
+                    return 0
                     ;;
             esac
         fi
@@ -266,8 +353,8 @@ checkLinuxDistro()
                     return 0
                     ;;
                 *)
-                    echo "Your Ubuntu version >>> $ubuntu_version <<< is not officially supported."
-                    exit 20
+                    markUnsupported "Ubuntu $ubuntu_version" "Ubuntu ${ubuntu_supported_versions}"
+                    return 0
                     ;;
             esac
         fi
@@ -300,18 +387,17 @@ checkLinuxDistro()
                         return 0
                         ;;
                     *)
-                        echo "Your Ubuntu version >>> $ubuntu_version <<< is not officially supported."
-                        exit 20
+                        markUnsupported "Ubuntu $ubuntu_version" "Ubuntu ${ubuntu_supported_versions}"
+                        return 0
                         ;;
                 esac
             else
-                echo "Could not determine Ubuntu version from available sources"
-                exit 20
+                markUnsupported "Ubuntu (version undetermined)" "Ubuntu ${ubuntu_supported_versions}"
+                return 0
             fi
         else
-            echo "Your Debian-based Linux distribution is not supported."
-            echo "Only Ubuntu ${ubuntu_supported_versions} are supported."
-            exit 21
+            markUnsupported "Debian-based (non-Ubuntu)" "Ubuntu ${ubuntu_supported_versions}"
+            return 0
         fi
     fi
 
@@ -331,8 +417,8 @@ checkLinuxDistro()
                     return 0
                     ;;
                 *)
-                    echo "RHEL version $redhat_distro_based_version is not supported"
-                    exit 18
+                    markUnsupported "RHEL-based EL$redhat_distro_based_version" "${redhat_supported_versions}"
+                    return 0
                     ;;
             esac
         fi
@@ -352,8 +438,8 @@ checkLinuxDistro()
         
         if [[ -z "$ubuntu_version" ]]
         then
-            echo "Could not determine Ubuntu version. Please use --force option if you want to proceed."
-            exit 20
+            markUnsupported "Ubuntu (version undetermined)" "Ubuntu ${ubuntu_supported_versions}"
+            return 0
         fi
         
         ubuntu_major_version=$(echo "$ubuntu_version" | cut -d '.' -f 1)
@@ -374,8 +460,8 @@ checkLinuxDistro()
         then
             redhat_distro_based_version=$(rpm -q --queryformat '%{VERSION}' redhat-release-server | cut -d. -f1)
         else
-            echo "Could not determine RHEL version. Please use --force option if you want to proceed."
-            exit 18
+            markUnsupported "RHEL-based (version undetermined)" "${redhat_supported_versions}"
+            return 0
         fi
         
         echo "Fallback detection: RHEL-based EL$redhat_distro_based_version"
@@ -392,7 +478,8 @@ checkLinuxDistro()
     echo "  - /etc/lsb-release: $([ -f /etc/lsb-release ] && echo 'exists' || echo 'missing')"
     echo "  - /etc/debian_version: $([ -f /etc/debian_version ] && echo 'exists' || echo 'missing')"
     echo "  - uname -a: $(uname -a)"
-    exit 32
+    markUnsupported "Unknown / undetectable distribution" "Ubuntu ${ubuntu_supported_versions}; RHEL ${redhat_supported_versions}"
+    return 0
 }
 
 disableIpv6()
@@ -599,13 +686,26 @@ installNiceDcvSetup()
 checkIfPortIsBeingUsed()
 {
 	port_to_check=$1
-	
-	if lsof -Pi :${port_to_check} -t > /dev/null
+	port_busy="unknown"
+
+	if commandExists lsof
+	then
+		lsof -Pi :${port_to_check} -t > /dev/null 2>&1 && port_busy="yes" || port_busy="no"
+	elif commandExists ss
+	then
+		ss -ltnu 2>/dev/null | grep -q ":${port_to_check}[[:space:]]" && port_busy="yes" || port_busy="no"
+	fi
+
+	if [[ "$port_busy" == "yes" ]]
 	then
 		echo -e "The script checked and the port >>> ${RED}$port_to_check${NC} <<< IS BEING used."
 		port_used=1
-	else
+	elif [[ "$port_busy" == "no" ]]
+	then
 		echo -e "The script checked and the port >>> ${GREEN}$port_to_check${NC} <<<< IS NOT being used."
+		port_used=0
+	else
+		echo -e "Neither lsof nor ss is available - cannot verify port $port_to_check; assuming it is free."
 		port_used=0
 	fi
 }
@@ -1001,7 +1101,12 @@ ubuntuSetupNiceDcvServer()
 
     echo "Restarting graphical services..."
     sudo systemctl isolate multi-user.target > /dev/null
-    sudo dcvgladmin enable > /dev/null
+    if commandExists dcvgladmin
+    then
+        sudo dcvgladmin enable > /dev/null
+    else
+        echo "dcvgladmin not found (DCV GL is only installed with GPU support) - skipping."
+    fi
     sudo systemctl isolate graphical.target > /dev/null
     sudo systemctl enable --now dcvserver > /dev/null
 
@@ -1438,7 +1543,10 @@ ubuntuConfigureFirewall()
     sudo apt-get -qqy install firewalld > /dev/null
 
     setFirewalldRules
-	sudo iptables-save 
+    if commandExists iptables-save
+    then
+        sudo iptables-save
+    fi
 }
 
 centosSetupNiceDcvWithGpuPrepareBase()
@@ -2409,6 +2517,13 @@ EOF
 
 setFirewalldRules()
 {
+    if ! commandExists firewall-cmd
+    then
+        echo "firewall-cmd not found (firewalld is not installed) - skipping firewall configuration."
+        echo "If you need it, install firewalld or re-run and select the firewalld component."
+        return 0
+    fi
+
     if [ -f /etc/systemd/system/multi-user.target.wants/dcvserver.service ]
     then
         echo "Configuring DCV ports with firewall-cmd..."
@@ -2450,7 +2565,10 @@ setFirewalldRules()
 
     echo "Reloading firewall-cmd..."
     sudo firewall-cmd --reload > /dev/null
-    sudo iptables-save 
+    if commandExists iptables-save
+    then
+        sudo iptables-save
+    fi
 }
 
 centosConfigureFirewall()
@@ -2463,8 +2581,11 @@ centosConfigureFirewall()
     echo "Installing firewalld..."
 	sudo yum -y install firewalld > /dev/null
 
-    echo "Saving iptables rules..."
-	sudo iptables-save > /dev/null
+    if commandExists iptables-save
+    then
+        echo "Saving iptables rules..."
+        sudo iptables-save > /dev/null
+    fi
 
     setFirewalldRules
 }
@@ -2500,6 +2621,13 @@ finishTheSetup()
 	        sudo reboot
 	    fi
     fi
+
+    # Menu-driven runs suppress the prompt above; honor the reboot toggle instead.
+    if $reboot_after_install
+    then
+        echo "Rebooting as requested in the installer menu..."
+        sudo reboot
+    fi
 }
 
 announceHowTheScriptWorks()
@@ -2527,8 +2655,18 @@ announceHowTheScriptWorks()
 }
 
 # global vars
-RED='\033[0;31m'; GREEN='\033[0;32m'; GREY='\033[0;37m'; BLUE='\034[0;37m'; NC='\033[0m'
+RED='\033[0;31m'; GREEN='\033[0;32m'; GREY='\033[0;37m'; NC='\033[0m'
 ORANGE='\033[0;33m'; BLUE='\033[0;34m'; WHITE='\033[0;97m'; UNLIN='\033[0;4m'
+# NI-SP blue palette for the menu (256-color, with a plain-blue fallback baked in)
+NISP_BLUE='\033[38;5;33m'          # NI-SP brand blue (foreground)
+NISP_BLUE_BOLD='\033[1;38;5;33m'   # bold brand blue
+NISP_BG='\033[48;5;33m\033[38;5;231m' # brand-blue background, white text (title bars)
+NISP_HL='\033[48;5;24m\033[38;5;231m' # darker-blue highlight for the selected row
+# menu / distro state
+distro_supported="true"
+detected_distro_label=""
+detected_supported_list=""
+reboot_after_install="false"
 service_setup_answer="no"
 setup_force="false"
 without_interaction_parameter="false"
@@ -2623,6 +2761,568 @@ url_nvidia_tesla_driver="https://us.download.nvidia.com/XFree86/Linux-x86_64/555
 
 checkParameters $@
 
+################################################################################
+# Pure-bash, dependency-free menuconfig-style TUI (NI-SP blue).
+# Space = select/toggle the highlighted row, Enter = drill in to customize
+# (GPU + port for DCV Server, components + ports for Session Manager),
+# n = next/accept, q = quit. Populates the very same decision/port variables the
+# old line-by-line questions used, so main()'s install flow is unchanged.
+################################################################################
+
+# Shared render arrays (set by each screen before drawing)
+MENU_LABELS=(); MENU_HINTS=(); MENU_MARK=()
+
+readKey()
+{
+    # Echoes the pressed key. Enter -> empty string, arrows -> ESC sequence.
+    local k rest
+    if ! IFS= read -rsn1 k 2>/dev/null
+    then
+        # EOF / closed stdin: behave as quit so menus never spin forever.
+        printf 'q'
+        return
+    fi
+    if [[ $k == $'\x1b' ]]
+    then
+        # Grab the rest of an escape sequence (arrow keys). Integer timeout so a
+        # lone ESC does not hang and bash 3.2 stays happy.
+        read -rsn2 -t 1 rest 2>/dev/null
+        k+="$rest"
+    fi
+    printf '%s' "$k"
+}
+
+niSpHeader()
+{
+    printf '\033[2J\033[H'
+    echo -e "${NISP_BG}                                                                              ${NC}"
+    echo -e "${NISP_BG}   NICE DCV Installer   -   NI SP GmbH                                         ${NC}"
+    echo -e "${NISP_BG}   Copyright (C) 2019-2026 NI SP GmbH                                          ${NC}"
+    echo -e "${NISP_BG}   info@ni-sp.com   -   www.ni-sp.com                                          ${NC}"
+    echo -e "${NISP_BG}                                                                              ${NC}"
+    echo
+}
+
+_drawRows()
+{
+    # $1 title (optional) · $2 highlighted index · $3 footer.
+    # Assumes the screen has already been cleared + a header drawn.
+    local title="$1" cur="$2" footer="$3" i rowtext
+    if [[ -n "$title" ]]
+    then
+        echo -e "  ${NISP_BLUE_BOLD}${title}${NC}"
+        echo
+    fi
+    for i in "${!MENU_LABELS[@]}"
+    do
+        rowtext=$(printf '  %-4s %-26s %s' "${MENU_MARK[$i]}" "${MENU_LABELS[$i]}" "${MENU_HINTS[$i]}")
+        if [[ $i -eq $cur ]]
+        then
+            echo -e "${NISP_HL}>${rowtext}${NC}"
+        else
+            echo -e " ${rowtext}"
+        fi
+    done
+    echo
+    echo -e "  ${GREY}${footer}${NC}"
+}
+
+editPortScreen()
+{
+    # $1 = human label · $2 = name of the variable holding the current port.
+    # Declare separately: a combined `local ... cur="${!varname}"` expands the
+    # indirect reference before varname is assigned, which errors out.
+    local label="$1"
+    local varname="$2"
+    local cur="${!varname}"
+    local input
+    while true
+    do
+        niSpHeader
+        echo -e "  ${NISP_BLUE_BOLD}Customize the ${label} port${NC}"
+        echo
+        echo -e "  Current value: ${GREEN}${cur}${NC}"
+        echo -e "  Enter a new port (1001-65535), or just press Enter to keep ${GREEN}${cur}${NC}."
+        echo
+        printf '  New port> '
+        IFS= read -r input
+        [[ -z "$input" ]] && return 0
+        if ! [[ "$input" =~ ^[0-9]+$ ]] || [ "$input" -le 1000 ] || [ "$input" -ge 65536 ]
+        then
+            echo -e "  ${RED}Invalid: the port must be a number between 1001 and 65535.${NC}"
+            sleep 1
+            continue
+        fi
+        checkIfPortIsBeingUsed "$input"
+        if [[ "$port_used" == "0" ]]
+        then
+            printf -v "$varname" '%s' "$input"
+            return 0
+        else
+            echo -e "  ${RED}Port $input is already in use. Please choose another.${NC}"
+            sleep 1
+        fi
+    done
+}
+
+editBrokerHostname()
+{
+    local input
+    niSpHeader
+    echo -e "  ${NISP_BLUE_BOLD}Session Manager Broker hostname${NC}"
+    echo
+    echo -e "  Current: ${GREEN}${broker_hostname}${NC}"
+    echo -e "  Enter a hostname or IP address, or just press Enter to keep it."
+    echo
+    printf '  Hostname> '
+    IFS= read -r input
+    [[ -n "$input" ]] && broker_hostname="$input"
+}
+
+runSelect()
+{
+    # Guided single-select list. $1 title · $2 footer · $3 starting index.
+    # Arrows move, Enter chooses the highlighted row (index in MENU_RESULT),
+    # q goes back. Returns 0 on Enter, 1 on q.
+    local title="$1" footer="$2" cur="${3:-0}" key n=${#MENU_LABELS[@]} i
+    while true
+    do
+        MENU_MARK=()
+        for i in "${!MENU_LABELS[@]}"; do MENU_MARK[$i]=""; done
+        niSpHeader
+        _drawRows "$title" "$cur" "$footer"
+        key=$(readKey)
+        case "$key" in
+            $'\x1b[A') cur=$(( (cur+n-1)%n )) ;;
+            $'\x1b[B') cur=$(( (cur+1)%n )) ;;
+            '')        MENU_RESULT=$cur; return 0 ;;
+            q|Q)       MENU_RESULT=-1; return 1 ;;
+        esac
+    done
+}
+
+portAvailText()
+{
+    # Sets PORT_AVAIL_TXT to a coloured availability note for port $1.
+    checkIfPortIsBeingUsed "$1" >/dev/null 2>&1
+    if [[ "$port_used" == "1" ]]
+    then
+        PORT_AVAIL_TXT="${RED}port $1 is currently IN USE${NC}"
+    else
+        PORT_AVAIL_TXT="${GREEN}port $1 is free - recommended${NC}"
+    fi
+}
+
+portChoiceStep()
+{
+    # Guided single-port step: recommend the current default (with availability)
+    # or let the user customize it. $1 label · $2 port variable name.
+    local label="$1" varname="$2" curport
+    while true
+    do
+        curport="${!varname}"
+        portAvailText "$curport"
+        MENU_LABELS=("Use port ${curport}" "Customize the port")
+        MENU_HINTS=("${PORT_AVAIL_TXT}" "enter a different port number")
+        runSelect "${label} port" "up/down move . [Enter] select . [q] back" 0 || return 1
+        if [[ $MENU_RESULT -eq 0 ]]
+        then
+            return 0
+        else
+            editPortScreen "$label" "$varname"
+        fi
+    done
+}
+
+clearServerSelection()
+{
+    dcv_will_be_installed="false"; nice_dcv_server_install_answer="no"; dcv_server_install="false"
+    dcv_gpu_support="false"; dcv_gpu_type="none"
+}
+
+clearSessionManagerSelection()
+{
+    nice_dcv_broker_install_answer="no";   dcv_broker="false"
+    nice_dcv_agent_install_answer="no";    dcv_agent="false"
+    nice_dcv_cli_install_answer="no";      dcv_cli="false"
+    nice_dcv_gateway_install_answer="no";  dcv_gateway="false"
+    nice_dcv_firewall_install_answer="no"; dcv_firewall="false"
+}
+
+infoScreen()
+{
+    niSpHeader
+    echo -e "  $1"
+    echo
+    echo -e "  ${GREY}Press Enter to continue.${NC}"
+    readKey >/dev/null
+}
+
+wizardServer()
+{
+    # GPU -> port -> confirm. Returns screenConfirm's result (0 start, 1 back).
+    local gpu
+    MENU_LABELS=("DCV Server + Software Rendering" "DCV Server + NVIDIA driver" "DCV Server + AMD driver")
+    MENU_HINTS=("" "" "")
+    runSelect "DCV Server  -  GPU support" "up/down move . [Enter] select . [q] back" 0 || return 1
+    gpu=$MENU_RESULT
+
+    portChoiceStep "DCV server" dcv_port || return 1
+
+    # commit DCV Server selection (and clear the Session Manager side)
+    dcv_will_be_installed="true"; nice_dcv_server_install_answer="yes"; dcv_server_install="true"
+    clearSessionManagerSelection
+    case $gpu in
+        0) dcv_gpu_support="false"; dcv_gpu_type="none" ;;
+        1) dcv_gpu_support="true";  dcv_gpu_type="nvidia" ;;
+        2) dcv_gpu_support="true";  dcv_gpu_type="amd" ;;
+    esac
+
+    screenConfirm
+}
+
+brokerNetworkStep()
+{
+    while true
+    do
+        MENU_LABELS=("Use default broker settings" "Customize ports & hostname")
+        MENU_HINTS=("client:${client_to_broker_port} agent:${agent_to_broker_port} host:${broker_hostname}" \
+                    "change the broker ports / hostname")
+        runSelect "Session Manager Broker  -  network" "up/down move . [Enter] select . [q] skip" 0 || return 0
+        if [[ $MENU_RESULT -eq 0 ]]
+        then
+            return 0
+        else
+            editPortScreen "Client-to-Broker" client_to_broker_port
+            editPortScreen "Agent-to-Broker" agent_to_broker_port
+            editBrokerHostname
+        fi
+    done
+}
+
+gatewayNetworkStep()
+{
+    while true
+    do
+        MENU_LABELS=("Use default gateway ports" "Customize gateway ports")
+        MENU_HINTS=("gw:${gateway_to_broker_port} res:${gateway_resolver_port} web:${gateway_web_resources}" \
+                    "change the gateway ports")
+        runSelect "Connection Gateway  -  network" "up/down move . [Enter] select . [q] skip" 0 || return 0
+        if [[ $MENU_RESULT -eq 0 ]]
+        then
+            return 0
+        else
+            editPortScreen "Gateway-to-Broker" gateway_to_broker_port
+            editPortScreen "Gateway Resolver" gateway_resolver_port
+            editPortScreen "Gateway Web Resources" gateway_web_resources
+        fi
+    done
+}
+
+screenSelectComponents()
+{
+    # Multi-select component list. Enter toggles the highlighted component;
+    # move down to "Continue" and press Enter to proceed. Returns 0 with the
+    # nice_dcv_*_install_answer / dcv_* flags set, 1 to go back.
+    local cur=0 key i sum
+    local sel=(0 0 0 0 0)   # broker agent cli gateway firewall
+    [[ $nice_dcv_broker_install_answer   == "yes" ]] && sel[0]=1
+    [[ $nice_dcv_agent_install_answer    == "yes" ]] && sel[1]=1
+    [[ $nice_dcv_cli_install_answer      == "yes" ]] && sel[2]=1
+    [[ $nice_dcv_gateway_install_answer  == "yes" ]] && sel[3]=1
+    [[ $nice_dcv_firewall_install_answer == "yes" ]] && sel[4]=1
+    while true
+    do
+        MENU_LABELS=("Session Manager Broker" "Session Manager Agent" "Session Manager CLI" "Connection Gateway" "firewalld" "Continue")
+        MENU_HINTS=("" "" "" "" "" "proceed with the selected components")
+        MENU_MARK=()
+        for i in 0 1 2 3 4
+        do
+            if [[ ${sel[$i]} -eq 1 ]]; then MENU_MARK[$i]="[x]"; else MENU_MARK[$i]="[ ]"; fi
+        done
+        MENU_MARK[5]="->"
+        niSpHeader
+        _drawRows "DCV Session Manager  -  select components" "$cur" \
+            "up/down move . [Enter] toggle / continue . [q] back"
+        key=$(readKey)
+        case "$key" in
+            $'\x1b[A') cur=$(( (cur+5)%6 )) ;;
+            $'\x1b[B') cur=$(( (cur+1)%6 )) ;;
+            '')        if [[ $cur -le 4 ]]
+                       then
+                           sel[$cur]=$(( 1-sel[$cur] ))
+                       else
+                           sum=$(( sel[0]+sel[1]+sel[2]+sel[3]+sel[4] ))
+                           if [[ $sum -eq 0 ]]
+                           then
+                               echo -e "  ${RED}Select at least one component before continuing.${NC}"
+                               sleep 1
+                           else
+                               break
+                           fi
+                       fi ;;
+            q|Q)       return 1 ;;
+        esac
+    done
+    if [[ ${sel[0]} -eq 1 ]]; then nice_dcv_broker_install_answer="yes";   dcv_broker="true";   else nice_dcv_broker_install_answer="no";   dcv_broker="false";   fi
+    if [[ ${sel[1]} -eq 1 ]]; then nice_dcv_agent_install_answer="yes";    dcv_agent="true";    else nice_dcv_agent_install_answer="no";    dcv_agent="false";    fi
+    if [[ ${sel[2]} -eq 1 ]]; then nice_dcv_cli_install_answer="yes";      dcv_cli="true";      else nice_dcv_cli_install_answer="no";      dcv_cli="false";      fi
+    if [[ ${sel[3]} -eq 1 ]]; then nice_dcv_gateway_install_answer="yes";  dcv_gateway="true";  else nice_dcv_gateway_install_answer="no";  dcv_gateway="false";  fi
+    if [[ ${sel[4]} -eq 1 ]]; then nice_dcv_firewall_install_answer="yes"; dcv_firewall="true"; else nice_dcv_firewall_install_answer="no"; dcv_firewall="false"; fi
+    return 0
+}
+
+wizardSessionManager()
+{
+    # Select the components first, then configure each selected one, then confirm.
+    # Returns screenConfirm's result (0 start, 1 back).
+    clearServerSelection
+    screenSelectComponents || return 1
+
+    # Ask the per-component settings only for the components that were selected.
+    [[ $nice_dcv_broker_install_answer  == "yes" ]] && brokerNetworkStep
+    [[ $nice_dcv_agent_install_answer   == "yes" ]] && portChoiceStep "Agent-to-Broker" agent_to_broker_port
+    [[ $nice_dcv_gateway_install_answer == "yes" ]] && gatewayNetworkStep
+
+    screenConfirm
+}
+
+runChecklist()
+{
+    # Generic multi-select list. Reads item labels from the global CHK_ITEMS
+    # array and toggles CHK_SEL[] (0/1). Adds a "Continue" row. Enter toggles the
+    # highlighted item or, on Continue, proceeds (needs >=1 selected).
+    # $1 = title. Returns 0 on Continue, 1 on q.
+    local title="$1" cur=0 key i sum n=${#CHK_ITEMS[@]} total
+    total=$(( n + 1 ))
+    for i in "${!CHK_ITEMS[@]}"; do [[ -z "${CHK_SEL[$i]}" ]] && CHK_SEL[$i]=0; done
+    while true
+    do
+        MENU_LABELS=(); MENU_HINTS=(); MENU_MARK=()
+        for i in "${!CHK_ITEMS[@]}"
+        do
+            MENU_LABELS[$i]="${CHK_ITEMS[$i]}"
+            MENU_HINTS[$i]=""
+            if [[ ${CHK_SEL[$i]} -eq 1 ]]; then MENU_MARK[$i]="[x]"; else MENU_MARK[$i]="[ ]"; fi
+        done
+        MENU_LABELS[$n]="Continue"; MENU_HINTS[$n]="proceed with the selected items"; MENU_MARK[$n]="->"
+        niSpHeader
+        _drawRows "$title" "$cur" "up/down move . [Enter] toggle / continue . [q] back"
+        key=$(readKey)
+        case "$key" in
+            $'\x1b[A') cur=$(( (cur+total-1)%total )) ;;
+            $'\x1b[B') cur=$(( (cur+1)%total )) ;;
+            '')        if [[ $cur -lt $n ]]
+                       then
+                           CHK_SEL[$cur]=$(( 1-CHK_SEL[$cur] ))
+                       else
+                           sum=0
+                           for i in "${!CHK_ITEMS[@]}"; do sum=$(( sum+CHK_SEL[$i] )); done
+                           if [[ $sum -eq 0 ]]
+                           then
+                               echo -e "  ${RED}Select at least one item before continuing.${NC}"
+                               sleep 1
+                           else
+                               break
+                           fi
+                       fi ;;
+            q|Q)       return 1 ;;
+        esac
+    done
+    return 0
+}
+
+uninstallConfirmScreen()
+{
+    # Lists SEL_PKGS (and their services) and asks for confirmation.
+    # Returns 0 to uninstall, 1 to go back. Defaults to the safe "Back" option.
+    local cur=1 key p u
+    while true
+    do
+        niSpHeader
+        echo -e "  ${RED}The following packages will be STOPPED and UNINSTALLED:${NC}"
+        echo
+        for p in "${SEL_PKGS[@]}"
+        do
+            echo -e "  ${ORANGE}- ${p}${NC}"
+            for u in $(pkgServiceUnits "$p"); do echo -e "        ${GREY}service: ${u}${NC}"; done
+        done
+        echo
+        MENU_LABELS=("Uninstall now" "Back")
+        MENU_HINTS=("stop the services and remove the packages" "cancel and keep everything")
+        MENU_MARK=("" "")
+        _drawRows "" "$cur" "up/down move . [Enter] choose . [q] back"
+        key=$(readKey)
+        case "$key" in
+            $'\x1b[A') cur=$(( (cur+1)%2 )) ;;
+            $'\x1b[B') cur=$(( (cur+1)%2 )) ;;
+            '')        [[ $cur -eq 0 ]] && return 0 || return 1 ;;
+            q|Q)       return 1 ;;
+        esac
+    done
+}
+
+wizardUninstall()
+{
+    # Detect installed DCV packages, let the user pick which to remove, confirm,
+    # then stop services and uninstall. Exits the script when done; returns 1 to
+    # go back to the product menu.
+    local i
+    listInstalledDcvPackages
+    if [[ ${#DCV_PKGS[@]} -eq 0 ]]
+    then
+        infoScreen "${GREEN}No NICE DCV packages are installed on this system.${NC}"
+        return 1
+    fi
+
+    CHK_ITEMS=("${DCV_PKGS[@]}")
+    CHK_SEL=()
+    runChecklist "Uninstall  -  select the packages to remove" || return 1
+
+    SEL_PKGS=()
+    for i in "${!DCV_PKGS[@]}"; do [[ ${CHK_SEL[$i]} -eq 1 ]] && SEL_PKGS+=("${DCV_PKGS[$i]}"); done
+
+    uninstallConfirmScreen || return 1
+
+    printf '\033[2J\033[H'
+    echo -e "${NISP_BLUE_BOLD}Uninstalling selected NICE DCV packages...${NC}"
+    echo
+    for i in "${SEL_PKGS[@]}"
+    do
+        uninstallOnePackage "$i"
+    done
+    echo
+    echo -e "${GREEN}Uninstall finished.${NC}"
+    exit 0
+}
+
+screenConfirm()
+{
+    # Summary + Start / reboot toggle / Back. Returns 0 to start, 1 to go back.
+    local cur=0 key
+    while true
+    do
+        niSpHeader
+        echo -e "  ${NISP_BLUE_BOLD}Review your selection${NC}"
+        echo
+        if [[ $dcv_will_be_installed == "true" ]]
+        then
+            echo -e "  Install : ${GREEN}DCV Server${NC}"
+            echo -e "  GPU     : ${GREEN}${dcv_gpu_type}${NC}"
+            echo -e "  DCV port: ${GREEN}${dcv_port}${NC}"
+        else
+            echo -e "  Install : ${GREEN}DCV Session Manager${NC}"
+            [[ $nice_dcv_broker_install_answer   == "yes" ]] && echo -e "    - Broker   (client:${client_to_broker_port} agent:${agent_to_broker_port} host:${broker_hostname})"
+            [[ $nice_dcv_agent_install_answer    == "yes" ]] && echo -e "    - Agent    (broker:${agent_to_broker_port})"
+            [[ $nice_dcv_cli_install_answer      == "yes" ]] && echo -e "    - CLI"
+            [[ $nice_dcv_gateway_install_answer  == "yes" ]] && echo -e "    - Gateway  (gw:${gateway_to_broker_port} res:${gateway_resolver_port} web:${gateway_web_resources})"
+            [[ $nice_dcv_firewall_install_answer == "yes" ]] && echo -e "    - firewalld"
+        fi
+        echo
+        MENU_LABELS=("Start setup now" "Reboot when finished" "Back to menu")
+        MENU_HINTS=("begin the installation" "toggle a reboot at the end" "change your selection")
+        MENU_MARK=("->" "[ ]" "<-")
+        [[ $reboot_after_install == "true" ]] && MENU_MARK[1]="[x]"
+        _drawRows "" "$cur" "up/down move . [Enter] choose (toggles reboot row) . [q] quit"
+        key=$(readKey)
+        case "$key" in
+            $'\x1b[A') cur=$(( (cur+2)%3 )) ;;
+            $'\x1b[B') cur=$(( (cur+1)%3 )) ;;
+            '')        case $cur in
+                           0) return 0 ;;
+                           1) [[ $reboot_after_install == "true" ]] && reboot_after_install="false" || reboot_after_install="true" ;;
+                           2) return 1 ;;
+                       esac ;;
+            q|Q)       printf '\033[2J\033[H'; echo "Aborted by user."; exit 0 ;;
+        esac
+    done
+}
+
+showInstallerMenu()
+{
+    # Guided, Enter-only wizard. Pick a product, then walk its steps.
+    while true
+    do
+        MENU_LABELS=("DCV Server" "DCV Session Manager" "Uninstall")
+        MENU_HINTS=("Remote desktop server (with or without GPU)" "Broker / Agent / CLI / Gateway / firewalld" "Remove installed DCV components")
+        runSelect "What do you want to do?" "up/down move . [Enter] select . [q] quit" 0
+        if [[ $? -ne 0 ]]
+        then
+            printf '\033[2J\033[H'; echo "Aborted by user."; exit 0
+        fi
+        case $MENU_RESULT in
+            0) wizardServer && return 0 ;;
+            1) wizardSessionManager && return 0 ;;
+            2) wizardUninstall ;;   # performs the removal and exits, or returns here
+        esac
+        # a non-zero return means the user backed out; loop to the product menu
+    done
+}
+
+showUnsupportedOsScreen()
+{
+    # Red warning for an unsupported/undetectable OS. Returns 0 to force, 1 to abort.
+    local cur=0 key
+    while true
+    do
+        niSpHeader
+        echo -e "${RED}##############################################################################${NC}"
+        echo -e "${RED}#  UNSUPPORTED OPERATING SYSTEM${NC}"
+        echo -e "${RED}##############################################################################${NC}"
+        echo
+        echo -e "  Detected            : ${ORANGE}${detected_distro_label}${NC}"
+        echo -e "  Officially supported: ${GREEN}${detected_supported_list}${NC}"
+        echo
+        echo -e "  NICE DCV / DCV Session Manager is not validated on this system and may"
+        echo -e "  not work. You can force the installation at your own risk - the script"
+        echo -e "  will then assume ${ORANGE}Ubuntu 22.04 / EL8 / EL7${NC} based on your package manager."
+        echo
+        MENU_LABELS=("Force install anyway" "Abort")
+        MENU_HINTS=("proceed at your own risk" "quit safely")
+        MENU_MARK=(">>" "<<")
+        _drawRows "" "$cur" "up/down move . [Enter] choose . [q] quit"
+        key=$(readKey)
+        case "$key" in
+            $'\x1b[A') cur=$(( (cur+1)%2 )) ;;
+            $'\x1b[B') cur=$(( (cur+1)%2 )) ;;
+            '')        [[ $cur -eq 0 ]] && return 0 || return 1 ;;
+            q|Q)       return 1 ;;
+        esac
+    done
+}
+
+showDcvAlreadyInstalledScreen()
+{
+    # Warns that DCV Server is already running. Returns 0 to proceed
+    # (reinstall / repair / update), 1 to exit and keep it untouched.
+    local cur=0 key
+    while true
+    do
+        niSpHeader
+        echo -e "${ORANGE}##############################################################################${NC}"
+        echo -e "${ORANGE}#  DCV SERVER IS ALREADY INSTALLED${NC}"
+        echo -e "${ORANGE}##############################################################################${NC}"
+        echo
+        echo -e "  The ${GREEN}dcvserver${NC} service is already running on this system."
+        echo -e "  NICE DCV Server appears to be installed and active."
+        echo
+        echo -e "  You can exit now to keep it untouched, or proceed to reinstall,"
+        echo -e "  repair or update the existing installation."
+        echo
+        MENU_LABELS=("Exit - keep the current installation" "Proceed - reinstall / repair / update")
+        MENU_HINTS=("recommended if DCV already works" "re-run the setup over the existing one")
+        MENU_MARK=("" "")
+        _drawRows "" "$cur" "up/down move . [Enter] choose . [q] exit"
+        key=$(readKey)
+        case "$key" in
+            $'\x1b[A') cur=$(( (cur+1)%2 )) ;;
+            $'\x1b[B') cur=$(( (cur+1)%2 )) ;;
+            '')        [[ $cur -eq 1 ]] && return 0 || return 1 ;;
+            q|Q)       return 1 ;;
+        esac
+    done
+}
+
 main()
 {
     temp_dir=$(mktemp -d -t dcv_installer_XXXXXXXXXX)
@@ -2631,9 +3331,67 @@ main()
 
 	checkLinuxDistro
 
-    if ! $without_interaction_parameter
+    # Unsupported / undetectable OS: offer to force instead of exiting outright.
+    if ! $distro_supported && ! $setup_force
     then
-    	announceHowTheScriptWorks
+        if ! $without_interaction_parameter && [ -t 0 ]
+        then
+            if showUnsupportedOsScreen
+            then
+                setup_force="true"
+                distro_supported="true"
+                # clear stale detection so the forced re-run is unambiguous
+                ubuntu_distro="false"; ubuntu_version=""; ubuntu_major_version=""; ubuntu_minor_version=""
+                redhat_distro_based="false"; redhat_distro_based_version=""
+                amazon_distro_based="false"; amazon_distro_version=""
+                checkLinuxDistro
+            else
+                printf '\033[2J\033[H'
+                echo "Installation aborted: unsupported OS (${detected_distro_label})."
+                echo "You can re-run with --force to bypass this check."
+                exit 20
+            fi
+        else
+            echo "Unsupported OS: ${detected_distro_label}. Supported: ${detected_supported_list}."
+            echo "Re-run with --force to bypass this check."
+            exit 20
+        fi
+    fi
+
+    # DCV Server already up? Warn and let the user exit or proceed to repair.
+    if dcvServerServiceRunning
+    then
+        if ! $without_interaction_parameter && [ -t 0 ]
+        then
+            if ! showDcvAlreadyInstalledScreen
+            then
+                printf '\033[2J\033[H'
+                echo "DCV Server is already installed and running. Exiting at your request."
+                exit 0
+            fi
+        else
+            echo "Note: the dcvserver service is already running - proceeding to reinstall/repair/update."
+        fi
+    fi
+
+    # Collect the install decisions once, before the per-distro branches.
+    if $without_interaction_parameter
+    then
+        # Automation path: flags already parsed; translate them into the answers.
+        askAboutServiceSetup "dcv"
+        askAboutSessionManagerComponents
+    else
+        if [ ! -t 0 ]
+        then
+            echo "The interactive menu needs a terminal (TTY)."
+            echo "Re-run with --without-interaction plus the desired --dcv_* flags."
+            exit 40
+        fi
+        showInstallerMenu
+        # Everything is chosen now; suppress the remaining line-by-line read prompts
+        # (embedded askThePort / broker hostname / press-enter) so they reuse the
+        # values the menu already set.
+        without_interaction_parameter="true"
     fi
 
     setup_guardian_var="false"
@@ -2641,9 +3399,7 @@ main()
     then
         ubuntuImportKey
         ubuntuSetupRequiredPackages
-        askAboutServiceSetup "dcv"
         installNiceDcvSetup
-        askAboutSessionManagerComponents
         ubuntuSetupSessionManagerBroker
         ubuntuSetupSessionManagerAgent
         ubuntuSetupSessionManagerGateway
@@ -2656,9 +3412,7 @@ main()
     then
         centosImportKey
         centosSetupRequiredPackages
-        askAboutServiceSetup "dcv"
         installNiceDcvSetup
-        askAboutSessionManagerComponents
 		centosSetupSessionManagerBroker
         centosSetupSessionManagerAgent
         centosSetupSessionManagerGateway
@@ -2670,9 +3424,7 @@ main()
     then
         centosImportKey
         centosSetupRequiredPackages
-        askAboutServiceSetup "dcv"
         installNiceDcvSetup
-        askAboutSessionManagerComponents
 		centosSetupSessionManagerBroker
         centosSetupSessionManagerAgent
         centosSetupSessionManagerGateway
