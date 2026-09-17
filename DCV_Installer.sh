@@ -16,7 +16,7 @@
 
 checkParameters()
 {
-    if echo $@ | egrep -iq "\-\-without-interaction"
+    if echo $@ | grep -Eiq "\-\-without-interaction"
     then
         without_interaction_parameter="true"
     
@@ -514,31 +514,31 @@ readTheServiceSetupAnswer()
             service_setup_answer="yes"
         fi
     else
-        if echo $service_name | egrep -iq "agent"
+        if echo $service_name | grep -Eiq "agent"
         then
 		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Agent${NC}?"
-        elif echo $service_name | egrep -iq "broker"
+        elif echo $service_name | grep -Eiq "broker"
         then
 		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Broker${NC}?"
-        elif echo $service_name | egrep -iq "gateway"
+        elif echo $service_name | grep -Eiq "gateway"
         then
 		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager Gateway${NC}?"
-        elif echo $service_name | egrep -iq "cli"
+        elif echo $service_name | grep -Eiq "cli"
         then
 		    echo -e "Do you want to install and setup ${GREEN}DCV Session Manager CLI${NC}?"
-        elif echo $service_name | egrep -iq "firewall"
+        elif echo $service_name | grep -Eiq "firewall"
         then
 		    echo -e "Do you want to install and setup ${GREEN}firewalld${NC}?"
-        elif echo $service_name | egrep -iq "dcv_server_install"
+        elif echo $service_name | grep -Eiq "dcv_server_install"
         then
 		    echo -e "Do you want to install and setup ${GREEN}DCV Server${NC}?"
-        elif echo $service_name | egrep -iq "dcv_gpu_support"
+        elif echo $service_name | grep -Eiq "dcv_gpu_support"
         then
             echo -e "Do you want to install ${GREEN}Nice DCV SERVER with GPU Support?${NC}"
-        elif echo $service_name | egrep -iq "dcv_server_gpu_nvidia"
+        elif echo $service_name | grep -Eiq "dcv_server_gpu_nvidia"
         then
             echo -e "Do you want to install ${GREEN}Nice DCV with NVIDIA Support?${NC}?"
-        elif echo $service_name | egrep -iq "dcv_server_gpu_amd"
+        elif echo $service_name | grep -Eiq "dcv_server_gpu_amd"
         then
             echo -e "Do you want to install ${GREEN}Nice DCV with AMD Support?${NC}?"
         else
@@ -567,26 +567,26 @@ askAboutSessionManagerComponents()
 askAboutServiceSetup()
 {
 	service_name=$1
-    if echo $service_name | egrep -iq "dcv"
+    if echo $service_name | grep -Eiq "dcv"
     then
         askAboutNiceDcvSetup
-    elif echo $service_name | egrep -iq "agent"
+    elif echo $service_name | grep -Eiq "agent"
     then
 		readTheServiceSetupAnswer "dcv_agent"
 		nice_dcv_agent_install_answer=$service_setup_answer
-    elif echo $service_name | egrep -iq "broker"
+    elif echo $service_name | grep -Eiq "broker"
     then
 		readTheServiceSetupAnswer "dcv_broker"
 		nice_dcv_broker_install_answer=$service_setup_answer
-    elif echo $service_name | egrep -iq "gateway"
+    elif echo $service_name | grep -Eiq "gateway"
     then
 		readTheServiceSetupAnswer "dcv_gateway"
 		nice_dcv_gateway_install_answer=$service_setup_answer
-    elif echo $service_name | egrep -iq "cli"
+    elif echo $service_name | grep -Eiq "cli"
     then
 		readTheServiceSetupAnswer "dcv_cli"
 		nice_dcv_cli_install_answer=$service_setup_answer
-    elif echo $service_name | egrep -iq "firewall"
+    elif echo $service_name | grep -Eiq "firewall"
     then
 		readTheServiceSetupAnswer "dcv_firewall"
 		nice_dcv_firewall_install_answer=$service_setup_answer
@@ -599,21 +599,21 @@ askAboutServiceSetup()
 askAboutNiceDcvSetup()
 {
 	readTheServiceSetupAnswer "dcv_server_install"
-    if echo $service_setup_answer | egrep -iq "yes"
+    if echo $service_setup_answer | grep -Eiq "yes"
     then
         dcv_will_be_installed="true"
 	    askThePort "Nice DCV"
 	    readTheServiceSetupAnswer "dcv_gpu_support"
-        if echo $service_setup_answer | egrep -iq "yes"
+        if echo $service_setup_answer | grep -Eiq "yes"
         then
             dcv_gpu_support="true"
 	        readTheServiceSetupAnswer "dcv_server_gpu_nvidia"
-            if echo $service_setup_answer | egrep -iq "yes"
+            if echo $service_setup_answer | grep -Eiq "yes"
             then
                 dcv_gpu_type="nvidia"
             else
 	            readTheServiceSetupAnswer "dcv_server_gpu_amd"
-                if echo $service_setup_answer | egrep -iq "yes"
+                if echo $service_setup_answer | grep -Eiq "yes"
                 then
                     echo "Currently AMD driver is not supported by this script. Please send an e-mail to info@ni-sp.com if you are interested."
                     exit 26
@@ -715,37 +715,37 @@ setThePort()
 	service_name=$1
 	port_to_set=$2
 
-	if echo $service_name | egrep -iq "dcv"
+	if echo $service_name | grep -Eiq "dcv"
 	then
 		if [[ "{$port_to_set}x" != "x" ]]
 		then
 			dcv_port=$port_to_set
 		fi
-	elif echo $service_name | egrep -iq "agent"
+	elif echo $service_name | grep -Eiq "agent"
 	then
 		if [[ "{$port_to_set}x" != "x" ]]
 		then
 			agent_to_broker_port=$port_to_set
 		fi
-	elif echo $service_name | egrep -iq "broker"
+	elif echo $service_name | grep -Eiq "broker"
 	then
 		if [[ "{$port_to_set}x" != "x" ]]
 		then
 			client_to_broker_port=$port_to_set			
 		fi
-	elif echo $service_name | egrep -iq "gateway"
+	elif echo $service_name | grep -Eiq "gateway"
 	then
 		if [[ "{$port_to_set}x" != "x" ]]
 		then
 			gateway_to_broker_port=$port_to_set
 		fi
-	elif echo $service_name | egrep -iq "resolver"
+	elif echo $service_name | grep -Eiq "resolver"
 	then
 		if [[ "{$port_to_set}x" != "x" ]]
 		then
 			gateway_resolver_port=$port_to_set
 		fi
-    elif echo $service_name | egrep -iq "web resources"
+    elif echo $service_name | grep -Eiq "web resources"
     then
         if [[ "{$port_to_set}x" != "x" ]]
         then
@@ -768,29 +768,29 @@ askThePort()
 	do
 		echo "###########################################"
 		echo -e "Do you want to customize the ${GREEN}$service_name port${NC}?"
-		if echo $service_name | egrep -iq "dcv"
+		if echo $service_name | grep -Eiq "dcv"
 		then
 			echo -e "The DCV default port is >>>${GREEN}${dcv_port}${NC} <<<."
 			port_tmp=${dcv_port}
-		elif echo $service_name | egrep -iq "agent"
+		elif echo $service_name | grep -Eiq "agent"
 		then
 			echo -e "The default DCV SM Agent to Broker port is >>> ${GREEN}${agent_to_broker_port}${NC} <<<."
 			echo "This port will be used by the DCV Session Manager Agent to connect to the DCV SM Broker."
 			port_tmp=${agent_to_broker_port}
-		elif echo $service_name | egrep -iq "broker"
+		elif echo $service_name | grep -Eiq "broker"
 		then
 			echo -e "The default DCV SM Client to Broker port is >>> ${GREEN}${client_to_broker_port}${NC} <<<."
 			echo "This port will be used by DCV SM Clients (e.g. CLI) to connect to the DCV SM Broker."
 			port_tmp=${client_to_broker_port}
-		elif echo $service_name | egrep -iq "gateway"
+		elif echo $service_name | grep -Eiq "gateway"
 		then
 			echo -e "The default DCV SM Gateway to Broker  port is >>> ${GREEN}${gateway_to_broker_port}${NC} <<<."
 			port_tmp=${gateway_to_broker_port}
-		elif echo $service_name | egrep -iq "resolver"
+		elif echo $service_name | grep -Eiq "resolver"
 		then
 			echo -e "The default DCV GW Resolver port is >>> ${GREEN}$gateway_resolver_port${NC} <<<."
 			port_tmp=${gateway_resolver_port}
-		elif echo $service_name | egrep -iq "web resources"
+		elif echo $service_name | grep -Eiq "web resources"
 		then
 			echo -e "The default DCV GW Web Resources port is >>> ${GREEN}$gateway_web_resources${NC} <<<."
 			port_tmp=${gateway_web_resources}
@@ -924,7 +924,7 @@ ubuntuSetupNiceDcvWithGpuPrepareBase()
     sudo apt-get install -qqy gcc make linux-headers-$(uname -r) > /dev/null
 
     echo "Blacklisting some kernel modules..."
-    if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
+    if ! cat /etc/modprobe.d/blacklist.conf | grep -Eiq "blacklist nouveau"
     then  
         cat << EOF | sudo tee --append /etc/modprobe.d/blacklist.conf > /dev/null 2>&1
 blacklist vga16fb
@@ -936,7 +936,7 @@ EOF
     fi
 
     echo "Blocking nouveau in GRUB_CMDLINE_LINUX..."
-    if ! cat /etc/modprobe.d/blacklist.conf | egrep -iq "blacklist nouveau"
+    if ! cat /etc/modprobe.d/blacklist.conf | grep -Eiq "blacklist nouveau"
     then  
         echo 'GRUB_CMDLINE_LINUX="rdblacklist=nouveau"' | sudo tee -a /etc/default/grub > /dev/null
         sudo update-grub
@@ -946,7 +946,7 @@ EOF
 ubuntuSetupNvidiaDriver()
 {
     echo "Installing NVIDIA driver..."
-	if dpkg -l | egrep -iq nvidia
+	if dpkg -l | grep -Eiq nvidia
 	then
 		echo "Driver already installed..."
 	else
@@ -1599,7 +1599,7 @@ EOF
 centosSetupNvidiaDriver()
 {
     echo "Installing NVIDIA driver..."
-	if rpm -qa | egrep -iq nvidia
+	if rpm -qa | grep -Eiq nvidia
 	then
 		echo "Driver already installed..."
 	else
@@ -1688,7 +1688,7 @@ centosSetupNiceDcvServer()
         dcv_server_pkg="$(eval echo \${aws_dcv_download_uri_server_el${redhat_distro_based_version}})"
     fi
 
-    if ! echo "$dcv_server_pkg" | egrep -iq "^https.*.tgz"
+    if ! echo "$dcv_server_pkg" | grep -Eiq "^https.*.tgz"
     then
         echo "Failed to get the right dcv server tarball file to dowload and install. Aborting..."
         exit 22
